@@ -240,7 +240,11 @@ function PriorityRow({
       <td className="px-3 py-4 max-w-[280px]">
         <div className="flex items-center gap-2 min-w-0">
           <div className={`size-2 rounded-full ${statusDot} shrink-0`} />
-          <span className="font-medium text-sm text-slate-800 truncate" title={task.title}>
+          <span
+            className="font-medium text-sm text-slate-800 whitespace-nowrap overflow-hidden"
+            title={task.title}
+            style={task.title.length > 35 ? { maskImage: "linear-gradient(to right, black 75%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, black 75%, transparent 100%)" } : undefined}
+          >
             {task.title}
           </span>
         </div>
