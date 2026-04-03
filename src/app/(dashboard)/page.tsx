@@ -119,9 +119,6 @@ function ProjectCard({
   );
 }
 
-// Grid columns definition for the priority list (inline style to avoid Tailwind scanning issues)
-const GRID_STYLE = { gridTemplateColumns: "40px 1fr 100px 100px 130px 120px 70px" } as const;
-
 // ── Priority Row (Desktop) ─────────────────────────────────────
 function PriorityRow({
   task,
@@ -129,12 +126,14 @@ function PriorityRow({
   onPreview,
   onEdit,
   onComplete,
+  onDelete,
 }: {
   task: Task;
   rank: number;
   onPreview: (t: Task) => void;
   onEdit: (t: Task) => void;
   onComplete: (t: Task, el?: HTMLElement) => void;
+  onDelete: (t: Task) => void;
 }) {
   const pc = getPriorityConfig(task.priority);
   const pb = PRIORITY_BG[task.priority] ?? "";
@@ -142,94 +141,107 @@ function PriorityRow({
   const color = task.project_id
     ? TAG_COLORS[getColorIndex(task.project_id)]
     : null;
+  const isTop = rank === 1;
+  const isTop3 = rank <= 3;
+  const statusDot = task.status === "in-progress" ? "bg-blue-500" : "bg-slate-400";
 
   return (
-    <div
-      className="group grid items-center py-3 px-3 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-50"
-      style={{ ...GRID_STYLE, animation: "rowSlideIn 0.3s ease-out" }}
+    <tr
+      className={`group hover:bg-slate-50/50 transition-colors cursor-pointer ${isTop ? "border-l-4 border-primary bg-primary/5" : ""}`}
+      style={{ animation: `rowSlideIn 200ms ease-out both`, animationDelay: `${Math.min((rank - 1) * 30, 300)}ms` }}
       onClick={() => onPreview(task)}
     >
       {/* Rank */}
-      <span
-        className={`font-black text-center ${
-          rank === 1
-            ? "text-lg text-primary"
-            : rank <= 3
-              ? "text-base text-slate-700"
-              : "text-sm text-slate-400"
-        }`}
-      >
+      <td className={`px-2 py-4 w-12 text-center select-none ${
+        isTop ? "text-2xl font-black text-primary/40"
+        : isTop3 ? "text-lg font-bold text-slate-300"
+        : "text-sm font-bold text-slate-300"
+      }`}>
         {rank}
-      </span>
+      </td>
       {/* Title */}
-      <p className="text-sm font-semibold text-slate-800 truncate pr-2">
-        {task.title}
-      </p>
+      <td className="px-3 py-4 max-w-[280px]">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`size-2 rounded-full ${statusDot} shrink-0`} />
+          <span className="font-medium text-sm text-slate-800 truncate">
+            {task.title}
+          </span>
+        </div>
+      </td>
       {/* Project */}
-      <div className="truncate">
+      <td className="px-3 py-4">
         {task.projects?.name && color ? (
-          <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${color.bg} ${color.text}`}>
+          <span className={`px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${color.bg} ${color.text}`}>
             {task.projects.name}
           </span>
         ) : (
-          <span className="text-xs text-slate-300">—</span>
+          <span className="text-xs text-slate-300">Sin asignar</span>
         )}
-      </div>
+      </td>
       {/* Priority */}
-      <div>
-        <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${pb}`}
-        >
+      <td className="px-3 py-4">
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${pb}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${pc.dot}`} />
           {pc.label}
         </span>
-      </div>
+      </td>
       {/* Deadline */}
-      <div>
+      <td className="px-3 py-4">
         {task.deadline ? (
-          <span
-            className={`text-xs font-medium ${
-              overdue ? "text-red-500" : "text-slate-500"
-            }`}
-          >
-            {overdue && "⚠ "}
+          <span className={`inline-flex items-center gap-1 text-sm font-medium ${
+            overdue ? "text-red-600 bg-red-50 px-2 py-1 rounded" : "text-slate-600"
+          }`}>
+            {overdue && <span className="material-symbols-outlined text-[12px] text-red-500">warning</span>}
             {formatDate(task.deadline)}
           </span>
         ) : (
           <span className="text-xs text-slate-300">—</span>
         )}
-      </div>
+      </td>
       {/* Assignee */}
-      <div className="flex items-center gap-1.5 min-w-0">
-        {task.profiles?.avatar_url ? (
-          <img src={task.profiles.avatar_url} className="w-5 h-5 rounded-full object-cover shrink-0" alt="" />
-        ) : (
-          <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-500 shrink-0">
-            {task.profiles?.full_name?.charAt(0) ?? "?"}
+      <td className="px-3 py-4">
+        <div className="flex items-center gap-1">
+          <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-2 py-1 rounded-full pr-3 border border-slate-100/50">
+            {task.profiles?.avatar_url ? (
+              <img src={task.profiles.avatar_url} className="size-5 rounded-full object-cover" alt="" />
+            ) : (
+              <div className="size-5 rounded-full bg-white flex items-center justify-center text-[10px] font-bold shadow-sm">
+                {(task.profiles?.full_name ?? "?").substring(0, 2).toUpperCase()}
+              </div>
+            )}
+            <span className="text-xs font-bold whitespace-nowrap">
+              {task.profiles?.full_name ?? "—"}
+            </span>
           </div>
-        )}
-        <span className="text-xs text-slate-600 truncate">
-          {task.profiles?.full_name ?? "—"}
-        </span>
-      </div>
+        </div>
+      </td>
       {/* Actions */}
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-          className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
-          title="Editar"
-        >
-          <span className="material-symbols-outlined text-slate-400 text-[18px]">edit</span>
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onComplete(task, e.currentTarget); }}
-          className="p-1 hover:bg-emerald-50 rounded-lg transition-colors"
-          title="Completar"
-        >
-          <span className="material-symbols-outlined text-emerald-500 text-[18px]">check_circle</span>
-        </button>
-      </div>
-    </div>
+      <td className="px-3 py-4 text-right">
+        <div className="flex items-center justify-end gap-0.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 hover:scale-110 transition-all duration-200"
+            title="Editar"
+          >
+            <span className="material-symbols-outlined text-[20px]">edit</span>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onComplete(task, e.currentTarget); }}
+            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 hover:scale-110 transition-all duration-200"
+            title="Completar"
+          >
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(task); }}
+            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-500/10 hover:scale-110 transition-all duration-200"
+            title="Eliminar"
+          >
+            <span className="material-symbols-outlined text-[20px]">delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -238,74 +250,88 @@ function PriorityCard({
   task,
   rank,
   onPreview,
+  onEdit,
   onComplete,
+  onDelete,
 }: {
   task: Task;
   rank: number;
   onPreview: (t: Task) => void;
+  onEdit: (t: Task) => void;
   onComplete: (t: Task, el?: HTMLElement) => void;
+  onDelete: (t: Task) => void;
 }) {
   const pc = getPriorityConfig(task.priority);
   const pb = PRIORITY_BG[task.priority] ?? "";
   const overdue = isOverdue(task.deadline);
+  const statusDot = task.status === "in-progress" ? "bg-blue-500" : "bg-slate-400";
+  const color = task.project_id
+    ? TAG_COLORS[getColorIndex(task.project_id)]
+    : null;
 
   return (
     <div
-      className="task-card bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer active:scale-[0.98] transition-transform"
+      className="p-4 flex flex-col gap-2 bg-white border-b border-slate-100 cursor-pointer active:bg-slate-50 transition-colors"
       onClick={() => onPreview(task)}
     >
-      <div className="flex items-start gap-3">
-        <span
-          className={`font-black mt-0.5 shrink-0 ${
-            rank === 1
-              ? "text-lg text-primary"
-              : rank <= 3
-                ? "text-base text-slate-700 dark:text-slate-300"
-                : "text-sm text-slate-400"
-          }`}
-        >
-          #{rank}
-        </span>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-tight">
-            {task.title}
-          </p>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${pb}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${pc.dot}`} />
-              {pc.label}
-            </span>
-            {task.projects?.name && (
-              <span className="text-[10px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                {task.projects.name}
-              </span>
-            )}
-            {task.deadline && (
-              <span
-                className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                  overdue
-                    ? "text-red-500 bg-red-50 dark:bg-red-900/20"
-                    : "text-slate-500 bg-slate-100 dark:bg-slate-800"
-                }`}
-              >
-                {formatDate(task.deadline)}
-              </span>
-            )}
-          </div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className={`size-2 rounded-full shrink-0 ${statusDot}`} />
+          <span className="font-semibold text-sm truncate">{task.title}</span>
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onComplete(task, e.currentTarget);
-          }}
-          className="p-1 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg shrink-0"
-        >
-          <span className="material-symbols-outlined text-emerald-500 text-[20px]">
-            check_circle
+        <div className="flex items-center gap-0.5 shrink-0 ml-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 active:scale-90 transition-all duration-200"
+            title="Editar"
+          >
+            <span className="material-symbols-outlined text-[20px]">edit</span>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onComplete(task, e.currentTarget); }}
+            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 active:scale-90 transition-all duration-200"
+            title="Completar"
+          >
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(task); }}
+            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-500/10 active:scale-90 transition-all duration-200"
+            title="Eliminar"
+          >
+            <span className="material-symbols-outlined text-[20px]">delete</span>
+          </button>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        {task.projects?.name && color ? (
+          <span className={`px-2 py-0.5 rounded text-xs font-bold ${color.bg} ${color.text}`}>
+            {task.projects.name}
           </span>
-        </button>
+        ) : null}
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${pb}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${pc.dot}`} />
+          {pc.label}
+        </span>
+        {task.deadline && (
+          <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+            overdue ? "text-red-600 bg-red-50" : "text-slate-500 bg-slate-100"
+          }`}>
+            {formatDate(task.deadline)}
+          </span>
+        )}
+        {task.profiles?.full_name && (
+          <div className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs font-bold">
+            {task.profiles?.avatar_url ? (
+              <img src={task.profiles.avatar_url} className="size-4 rounded-full object-cover" alt="" />
+            ) : (
+              <div className="size-4 rounded-full bg-white flex items-center justify-center text-[9px] font-bold shadow-sm">
+                {task.profiles.full_name.substring(0, 2).toUpperCase()}
+              </div>
+            )}
+            {task.profiles.full_name}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -319,6 +345,7 @@ export default function PriorityPage() {
     tasksLoading,
     projects,
     completeTask,
+    deleteTask,
     openTaskModal,
     openPreview,
     globalSearch: searchQuery,
@@ -418,6 +445,16 @@ export default function PriorityPage() {
       celebrate(el, firstName);
     } catch {
       showToast("Error al completar la tarea");
+    }
+  }
+
+  async function handleDelete(task: Task) {
+    if (!confirm(`¿Eliminar "${task.title}"?`)) return;
+    try {
+      await deleteTask(task.id);
+      showToast("Tarea eliminada", "success");
+    } catch {
+      showToast("Error al eliminar la tarea");
     }
   }
 
@@ -535,64 +572,90 @@ export default function PriorityPage() {
       </div>
 
       {/* ── Priority List (Desktop) ────────────────────────── */}
-      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        {/* Header */}
-        <div className="grid items-center py-3 px-3 border-b border-slate-100 text-xs text-slate-400 uppercase tracking-wider" style={GRID_STYLE}>
-          <span className="text-center">#</span>
-          <span>Tarea</span>
-          <span>Proyecto</span>
-          <span>Prioridad</span>
-          <span>Fecha Limite</span>
-          <span>Responsable</span>
-          <span className="text-center">Acciones</span>
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-100">
+        {/* Section header */}
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary">auto_awesome</span>
+            <h3 className="font-bold text-lg">Lista de Prioridades</h3>
+          </div>
+          <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded">Deadline + Prioridad</span>
         </div>
 
-        {/* Rows */}
-        {displayTasks.length === 0 ? (
-          <div className="py-12 text-center text-slate-400">
-            <span className="material-symbols-outlined text-4xl mb-2 block">
-              task_alt
-            </span>
-            {searchQuery || priorityFilter || projectFilters.size > 0
-              ? "No hay tareas con estos filtros"
-              : "No hay tareas pendientes"}
-          </div>
-        ) : (
-          displayTasks.map((task, i) => (
-            <PriorityRow
-              key={task.id}
-              task={task}
-              rank={i + 1}
-              onPreview={openPreview}
-              onEdit={openTaskModal}
-              onComplete={handleComplete}
-            />
-          ))
-        )}
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left border-collapse">
+            <thead>
+              <tr className="text-xs font-semibold text-slate-500 uppercase tracking-wider bg-slate-50">
+                <th className="px-2 py-4 w-12">#</th>
+                <th className="px-3 py-4 max-w-[280px]">Tarea</th>
+                <th className="px-3 py-4">Proyecto</th>
+                <th className="px-3 py-4">Prioridad</th>
+                <th className="px-3 py-4">Fecha Limite</th>
+                <th className="px-3 py-4">Responsable</th>
+                <th className="px-3 py-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {displayTasks.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="material-symbols-outlined text-5xl text-slate-200 mb-3">task_alt</span>
+                      <h4 className="font-semibold text-slate-500 mb-1">No se encontraron tareas</h4>
+                      <p className="text-sm text-slate-400 max-w-xs">
+                        {searchQuery || priorityFilter !== null || projectFilters.size > 0
+                          ? "No hay tareas con estos filtros"
+                          : "No hay tareas pendientes"}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                displayTasks.map((task, i) => (
+                  <PriorityRow
+                    key={task.id}
+                    task={task}
+                    rank={i + 1}
+                    onPreview={openPreview}
+                    onEdit={openTaskModal}
+                    onComplete={handleComplete}
+                    onDelete={handleDelete}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {/* View all toggle */}
         {sortedTasks.length > 10 && (
-          <div className="border-t border-slate-100 px-4 py-3 text-center">
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 text-center">
             <button
               onClick={() => setViewAll((prev) => !prev)}
-              className="text-sm text-primary font-semibold hover:underline"
+              className="text-primary text-sm font-semibold hover:underline px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors"
             >
               {viewAll
-                ? "Mostrar Top 10"
-                : `Ver todas (${sortedTasks.length})`}
+                ? "Ver top 10 tareas prioritarias"
+                : `Ver todas las ${sortedTasks.length} tareas`}
             </button>
           </div>
         )}
       </div>
 
       {/* ── Priority Cards (Mobile) ─────────────────────────── */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        {/* Mobile header */}
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-[20px]">auto_awesome</span>
+          <h3 className="font-bold text-base">Lista de Prioridades</h3>
+        </div>
         {displayTasks.length === 0 ? (
           <div className="py-12 text-center text-slate-400">
             <span className="material-symbols-outlined text-4xl mb-2 block">
               task_alt
             </span>
-            {searchQuery || priorityFilter || projectFilters.size > 0
+            {searchQuery || priorityFilter !== null || projectFilters.size > 0
               ? "No hay tareas con estos filtros"
               : "No hay tareas pendientes"}
           </div>
@@ -603,7 +666,9 @@ export default function PriorityPage() {
               task={task}
               rank={i + 1}
               onPreview={openPreview}
+              onEdit={openTaskModal}
               onComplete={handleComplete}
+              onDelete={handleDelete}
             />
           ))
         )}
