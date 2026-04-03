@@ -57,11 +57,15 @@ function ProjectCard({
   name,
   tasks,
   colorIdx,
+  isActive,
+  hasActiveFilters,
   onClick,
 }: {
   name: string;
   tasks: Task[];
   colorIdx: number;
+  isActive: boolean;
+  hasActiveFilters: boolean;
   onClick?: () => void;
 }) {
   const done = tasks.filter((t) => t.status === "done").length;
@@ -75,16 +79,22 @@ function ProjectCard({
 
   const color = TAG_COLORS[colorIdx % TAG_COLORS.length];
 
+  const cardClass = isActive
+    ? "ring-2 ring-primary ring-offset-2 border-primary shadow-md"
+    : hasActiveFilters
+      ? "border border-slate-100 shadow-sm opacity-50 hover:opacity-100 scale-[0.98]"
+      : "border border-slate-100 shadow-sm";
+
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 w-56 p-4 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow text-left"
+      className={`flex-shrink-0 w-56 p-4 bg-white rounded-xl cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-left ${cardClass}`}
     >
       <div className="flex items-center gap-2 mb-3">
         <span
           className={`w-2.5 h-2.5 rounded-full ${color.bg} ring-2 ${color.ring}`}
         />
-        <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+        <span className="text-sm font-bold text-slate-800 truncate">
           {name}
         </span>
       </div>
@@ -94,7 +104,7 @@ function ProjectCard({
         </span>
         <span className={`text-sm font-bold ${color.text}`}>{pct}%</span>
       </div>
-      <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div
           className={`h-full ${color.bg} rounded-full transition-all duration-500`}
           style={{ width: `${pct}%` }}
@@ -310,6 +320,15 @@ export default function PriorityPage() {
   const sortedTasks = useMemo(() => {
     let filtered = tasks.filter((t) => t.status !== "done");
 
+    // Members always see only their own tasks (not configurable)
+    if (role === "member" && user?.id) {
+      filtered = filtered.filter(
+        (t) =>
+          t.responsible_id === user.id ||
+          t.secondary_responsible_id === user.id
+      );
+    }
+
     // Project filter
     if (projectFilters.size > 0) {
       filtered = filtered.filter((t) =>
@@ -322,7 +341,7 @@ export default function PriorityPage() {
       filtered = filtered.filter((t) => t.priority === priorityFilter);
     }
 
-    // User filter (admin only)
+    // User filter (admin only — optional on top of seeing all tasks)
     if (userFilters.size > 0 && role === "admin") {
       filtered = filtered.filter(
         (t) =>
@@ -429,6 +448,8 @@ export default function PriorityPage() {
                 name={p.name}
                 tasks={p.tasks}
                 colorIdx={getColorIndex(p.id)}
+                isActive={projectFilters.has(p.id)}
+                hasActiveFilters={projectFilters.size > 0}
                 onClick={() => toggleProjectFilter(p.id)}
               />
             ))}

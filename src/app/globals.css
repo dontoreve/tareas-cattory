@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Force light mode — dark: classes only activate with .dark class (never applied) */
+@custom-variant dark (&:is(.dark *));
+
 /* ── Cattory Theme ───────────────────────────────────────────── */
 @theme inline {
   --color-primary: #2b7cee;
