@@ -241,7 +241,7 @@ function PriorityRow({
         <div className="flex items-center gap-2 min-w-0">
           <div className={`size-2 rounded-full ${statusDot} shrink-0`} />
           <span
-            className="font-medium text-sm text-slate-800 whitespace-nowrap overflow-hidden"
+            className="font-medium text-sm text-slate-800 truncate block"
             title={task.title}
             style={task.title.length > 35 ? { maskImage: "linear-gradient(to right, black 75%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, black 75%, transparent 100%)" } : undefined}
           >
@@ -669,7 +669,7 @@ export default function PriorityPage() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[900px] text-left border-collapse">
             <thead>
               <tr className="text-xs font-semibold text-slate-500 uppercase tracking-wider bg-slate-50">
                 <th className="px-2 py-4 w-10">#</th>
