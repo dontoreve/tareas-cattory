@@ -313,7 +313,7 @@ export default function KanbanPage() {
           >
             <option value="">Mis Tareas</option>
             {teamMembers
-              .filter((m) => m.role === "member")
+              .filter((m) => m.id !== user?.id)
               .map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.full_name ?? "Sin nombre"}

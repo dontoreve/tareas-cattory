@@ -46,6 +46,9 @@ interface DashboardState {
   hasMemberAccess: (memberId: string, projectId: string) => boolean;
   refetchProjects: () => Promise<void>;
   refetchMembers: () => Promise<void>;
+  createProject: (name: string) => Promise<Project>;
+  renameProject: (id: string, name: string) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
 
   // Task modal state
   taskModalOpen: boolean;
@@ -87,6 +90,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     getProjectsForMember,
     hasMemberAccess,
     refetch: refetchProjects,
+    createProject,
+    renameProject,
+    deleteProject,
   } = useProjects({ userId, role });
 
   const { members: teamMembers, loading: membersLoading, refetch: refetchMembers } =
@@ -140,6 +146,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         hasMemberAccess,
         refetchProjects,
         refetchMembers,
+        createProject,
+        renameProject,
+        deleteProject,
         taskModalOpen,
         editingTask,
         openTaskModal,

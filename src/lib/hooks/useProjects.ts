@@ -86,6 +86,57 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
     [memberAccess, role]
   );
 
+  const createProject = useCallback(
+    async (name: string) => {
+      const { data, error } = await supabase
+        .from("projects")
+        .insert({ name, owner_id: userId! })
+        .select("*")
+        .single();
+      if (error) throw error;
+      setProjects((prev) => [...prev, data as Project]);
+      return data as Project;
+    },
+    [userId]
+  );
+
+  const renameProject = useCallback(
+    async (projectId: string, name: string) => {
+      const { error } = await supabase
+        .from("projects")
+        .update({ name })
+        .eq("id", projectId);
+      if (error) throw error;
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, name } : p))
+      );
+    },
+    []
+  );
+
+  const deleteProject = useCallback(
+    async (projectId: string) => {
+      // Unassign tasks from this project
+      await supabase
+        .from("tasks")
+        .update({ project_id: null })
+        .eq("project_id", projectId);
+      // Remove member access
+      await supabase
+        .from("member_project_access")
+        .delete()
+        .eq("project_id", projectId);
+      // Delete the project
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+      if (error) throw error;
+      setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    },
+    []
+  );
+
   return {
     projects,
     memberAccess,
@@ -93,5 +144,8 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
     refetch: fetchProjects,
     getProjectsForMember,
     hasMemberAccess,
+    createProject,
+    renameProject,
+    deleteProject,
   };
 }

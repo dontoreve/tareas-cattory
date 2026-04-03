@@ -11,6 +11,7 @@ import MobileNav from "@/components/layout/MobileNav";
 import MobileMoreSheet from "@/components/layout/MobileMoreSheet";
 import FloatingNewTaskButton from "@/components/layout/FloatingNewTaskButton";
 import TeamMembersModal from "@/components/modals/TeamMembersModal";
+import ProjectsModal from "@/components/modals/ProjectsModal";
 import TaskModal, { type TaskFormData } from "@/components/modals/TaskModal";
 import TaskPreviewModal from "@/components/modals/TaskPreviewModal";
 import { useCelebration } from "@/components/ui/CelebrationAnimation";
@@ -35,6 +36,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     getProjectsForMember,
     refetchProjects,
     refetchMembers,
+    createProject,
+    renameProject,
+    deleteProject: deleteProjectFn,
     setGlobalSearch,
     previewTask,
     openPreview,
@@ -51,6 +55,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [teamModalOpen, setTeamModalOpen] = useState(false);
+  const [projectsModalOpen, setProjectsModalOpen] = useState(false);
 
   // Keyboard shortcut: C → open new task, Escape → close modal
   useEffect(() => {
@@ -128,8 +133,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark">
       <Sidebar
         onTeamClick={() => setTeamModalOpen(true)}
-        onNewProjectClick={() => {/* Phase later */}}
-        onManageProjectsClick={() => {/* Phase later */}}
+        onNewProjectClick={() => setProjectsModalOpen(true)}
+        onManageProjectsClick={() => setProjectsModalOpen(true)}
       />
 
       <main className="flex-1 flex flex-col min-h-0 md:ml-[280px]">
@@ -150,8 +155,17 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         open={moreSheetOpen}
         onClose={() => setMoreSheetOpen(false)}
         onTeamClick={() => setTeamModalOpen(true)}
-        onNewProjectClick={() => {}}
-        onManageProjectsClick={() => {}}
+        onNewProjectClick={() => setProjectsModalOpen(true)}
+        onManageProjectsClick={() => setProjectsModalOpen(true)}
+      />
+
+      <ProjectsModal
+        open={projectsModalOpen}
+        onClose={() => setProjectsModalOpen(false)}
+        projects={projects}
+        onCreate={createProject}
+        onRename={renameProject}
+        onDelete={deleteProjectFn}
       />
 
       <TeamMembersModal

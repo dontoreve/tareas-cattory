@@ -121,6 +121,27 @@ export default function TaskModal({
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
+  // Detect URLs in description
+  const urlRegex = /https?:\/\/[^\s]+/g;
+  const detectedUrls = description.match(urlRegex) ?? [];
+  const hasUnmigratedUrls = detectedUrls.some(
+    (url) => !links.some((l) => l.url === url)
+  );
+
+  function migrateUrls() {
+    const newLinks = detectedUrls
+      .filter((url) => !links.some((l) => l.url === url))
+      .map((url) => ({ label: url, url }));
+    if (newLinks.length === 0) return;
+    setLinks((prev) => [...prev, ...newLinks]);
+    // Remove URLs from description
+    let cleaned = description;
+    for (const url of detectedUrls) {
+      cleaned = cleaned.replace(url, "").trim();
+    }
+    setDescription(cleaned);
+  }
+
   const addLink = useCallback(() => {
     if (!linkUrl.trim()) return;
     setLinks((prev) => [...prev, { label: linkLabel.trim() || linkUrl.trim(), url: linkUrl.trim() }]);
@@ -241,6 +262,23 @@ export default function TaskModal({
               rows={2}
               className="w-full bg-transparent border-none outline-none text-sm text-slate-600 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none"
             />
+
+            {/* URL migration banner */}
+            {hasUnmigratedUrls && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg">
+                <span className="material-symbols-outlined text-primary text-[18px]">link</span>
+                <span className="text-xs text-primary flex-1">
+                  URL detectada en la descripción
+                </span>
+                <button
+                  type="button"
+                  onClick={migrateUrls}
+                  className="text-xs font-bold text-primary hover:underline"
+                >
+                  Mover a Links
+                </button>
+              </div>
+            )}
 
             {/* Fields grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
