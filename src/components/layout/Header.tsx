@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import NotificationBell from "@/components/ui/NotificationBell";
+import { usePushNotifications } from "@/lib/hooks/usePushNotifications";
 
 const PAGE_TITLES: Record<string, string> = {
   "/": "Prioridades",
@@ -22,6 +23,7 @@ export default function Header({
   const { user, profile, role, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const push = usePushNotifications();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const pageTitle = PAGE_TITLES[pathname] ?? "Cattory";
@@ -117,7 +119,34 @@ export default function Header({
                   </div>
                 </div>
               </div>
-              <div className="p-2">
+              <div className="p-2 space-y-1">
+                {/* Push notifications toggle */}
+                {push.supported && (
+                  <button
+                    onClick={async () => {
+                      if (push.subscribed) {
+                        await push.unsubscribe(user?.id ?? "");
+                      } else {
+                        await push.subscribe(user?.id ?? "");
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors font-medium"
+                  >
+                    <span className="material-symbols-outlined text-lg"
+                      style={push.subscribed ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+                      {push.subscribed ? "notifications_active" : "notifications_off"}
+                    </span>
+                    {push.subscribed ? "Notificaciones activadas" : "Activar notificaciones"}
+                    {push.subscribed && (
+                      <span className="ml-auto w-2 h-2 rounded-full bg-emerald-500" />
+                    )}
+                  </button>
+                )}
+                {push.permission === "denied" && (
+                  <p className="px-3 py-1 text-[10px] text-red-400">
+                    Notificaciones bloqueadas en el navegador
+                  </p>
+                )}
                 <button
                   onClick={() => {
                     setMenuOpen(false);
