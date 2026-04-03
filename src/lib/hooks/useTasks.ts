@@ -12,7 +12,7 @@ interface UseTasksOptions {
   role: "admin" | "member";
 }
 
-export function useTasks({ userId, role }: UseTasksOptions) {
+export function useTasks({ userId }: UseTasksOptions) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const suppressUntil = useRef(0);
@@ -27,23 +27,13 @@ export function useTasks({ userId, role }: UseTasksOptions) {
         .select(TASK_SELECT);
 
       if (error) throw error;
-      let result = (data ?? []) as Task[];
-
-      // Member: only sees own tasks (primary or secondary)
-      if (role === "member") {
-        result = result.filter(
-          (t) =>
-            t.responsible_id === userId ||
-            t.secondary_responsible_id === userId
-        );
-      }
-
-      setTasks(result);
+      // RLS handles access control — admin sees all, member sees assigned + project tasks
+      setTasks((data ?? []) as Task[]);
     } finally {
       fetchInFlight.current = false;
       setLoading(false);
     }
-  }, [userId, role]);
+  }, [userId]);
 
   // Initial fetch
   useEffect(() => {
