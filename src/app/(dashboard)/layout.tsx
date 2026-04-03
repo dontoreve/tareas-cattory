@@ -14,7 +14,10 @@ import TeamMembersModal from "@/components/modals/TeamMembersModal";
 import ProjectsModal from "@/components/modals/ProjectsModal";
 import TaskModal, { type TaskFormData } from "@/components/modals/TaskModal";
 import TaskPreviewModal from "@/components/modals/TaskPreviewModal";
+import RecurringModal from "@/components/modals/RecurringModal";
+import { useRecurringTasks, type RecurringTemplate } from "@/lib/hooks/useRecurringTasks";
 import { useCelebration } from "@/components/ui/CelebrationAnimation";
+import { getPriorityConfig } from "@/lib/utils/priority";
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -53,9 +56,15 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const { showToast } = useToast();
   const celebrate = useCelebration();
 
+  // Recurring tasks (admin only)
+  const { templates: recurringTemplates, createTemplate, updateTemplate, deleteTemplate: deleteRecurringTemplate } =
+    useRecurringTasks(user?.id ?? null, role);
+
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [teamModalOpen, setTeamModalOpen] = useState(false);
   const [projectsModalOpen, setProjectsModalOpen] = useState(false);
+  const [recurringModalOpen, setRecurringModalOpen] = useState(false);
+  const [editingRecurring, setEditingRecurring] = useState<RecurringTemplate | null>(null);
 
   // Keyboard shortcut: C → open new task, Escape → close modal
   useEffect(() => {
@@ -135,6 +144,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         onTeamClick={() => setTeamModalOpen(true)}
         onNewProjectClick={() => setProjectsModalOpen(true)}
         onManageProjectsClick={() => setProjectsModalOpen(true)}
+        recurringTemplates={recurringTemplates as any}
+        onNewRecurring={() => { setEditingRecurring(null); setRecurringModalOpen(true); }}
+        onEditRecurring={(t: any) => { setEditingRecurring(t); setRecurringModalOpen(true); }}
       />
 
       <main className="flex-1 flex flex-col min-h-0 md:ml-[280px]">
@@ -195,6 +207,30 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         task={editingTask}
         teamMembers={teamMembers}
         projects={modalProjects}
+        currentUserId={user?.id ?? ""}
+      />
+
+      <RecurringModal
+        open={recurringModalOpen}
+        onClose={() => { setRecurringModalOpen(false); setEditingRecurring(null); }}
+        onSave={async (data) => {
+          if (editingRecurring) {
+            await updateTemplate(editingRecurring.id, data);
+            showToast("Recurrente actualizada", "success");
+          } else {
+            await createTemplate(data as any);
+            showToast("Recurrente creada", "success");
+          }
+        }}
+        onDelete={editingRecurring ? async () => {
+          await deleteRecurringTemplate(editingRecurring.id);
+          setRecurringModalOpen(false);
+          setEditingRecurring(null);
+          showToast("Recurrente eliminada", "success");
+        } : undefined}
+        template={editingRecurring}
+        teamMembers={teamMembers}
+        projects={projects}
         currentUserId={user?.id ?? ""}
       />
 

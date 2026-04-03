@@ -29,14 +29,49 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+interface RecurringChip {
+  id: string;
+  title: string;
+  frequency: string;
+  days_of_week: number[];
+  week_of_month: number | null;
+  is_active: boolean;
+  priority: number;
+  profiles?: { full_name: string | null };
+}
+
+const DAY_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const WEEK_LABELS = ["1ra", "2da", "3ra", "4ta"];
+
+function getFreqSummary(t: RecurringChip): string {
+  const dayStr = t.days_of_week.map((d) => DAY_SHORT[d]).join(", ");
+  if (t.frequency === "weekly") return `Cada ${dayStr}`;
+  if (t.frequency === "biweekly") return `Quincenal ${dayStr}`;
+  if (t.frequency === "monthly") {
+    const wl = WEEK_LABELS[(t.week_of_month ?? 1) - 1] ?? "";
+    return `${wl} ${dayStr}/mes`;
+  }
+  return dayStr;
+}
+
+const PRIORITY_DOT: Record<number, string> = {
+  5: "bg-red-500", 4: "bg-orange-500", 3: "bg-amber-500", 2: "bg-green-500", 1: "bg-slate-400",
+};
+
 export default function Sidebar({
   onTeamClick,
   onNewProjectClick,
   onManageProjectsClick,
+  recurringTemplates = [],
+  onNewRecurring,
+  onEditRecurring,
 }: {
   onTeamClick?: () => void;
   onNewProjectClick?: () => void;
   onManageProjectsClick?: () => void;
+  recurringTemplates?: RecurringChip[];
+  onNewRecurring?: () => void;
+  onEditRecurring?: (template: RecurringChip) => void;
 }) {
   const pathname = usePathname();
   const { profile, role } = useAuth();
@@ -115,6 +150,7 @@ export default function Sidebar({
               Recurrentes
             </span>
             <button
+              onClick={onNewRecurring}
               className="p-1 hover:bg-white/40 dark:hover:bg-white/10 rounded-lg transition-colors"
               title="Nueva tarea recurrente"
             >
@@ -124,7 +160,31 @@ export default function Sidebar({
             </button>
           </div>
           <div className="space-y-1 max-h-[180px] overflow-y-auto custom-scroll">
-            {/* Recurring chips will be populated by data hooks */}
+            {recurringTemplates.length === 0 ? (
+              <p className="text-[10px] text-slate-300 px-2">Sin recurrentes</p>
+            ) : (
+              recurringTemplates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => onEditRecurring?.(t)}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-white/40 dark:hover:bg-white/10 transition-colors ${
+                    !t.is_active ? "opacity-40" : ""
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px] text-slate-400"
+                    style={t.is_active ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+                    repeat
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">{t.title}</p>
+                    <p className="text-[9px] text-slate-400 truncate">
+                      {getFreqSummary(t)} · {t.profiles?.full_name?.split(" ")[0] ?? ""}
+                    </p>
+                  </div>
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${PRIORITY_DOT[t.priority] ?? "bg-slate-400"}`} />
+                </button>
+              ))
+            )}
           </div>
         </div>
       )}
