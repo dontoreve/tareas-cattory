@@ -30,6 +30,8 @@ interface DatePickerProps {
   onChange: (iso: string) => void;
   mode?: "click" | "hover";
   placeholder?: string;
+  variant?: "input" | "inline";
+  overdue?: boolean;
 }
 
 export default function DatePicker({
@@ -37,6 +39,8 @@ export default function DatePicker({
   onChange,
   mode = "hover",
   placeholder = "Sin fecha",
+  variant = "input",
+  overdue = false,
 }: DatePickerProps) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(
@@ -159,37 +163,56 @@ export default function DatePicker({
 
   return (
     <div className="relative">
-      {/* Desktop trigger */}
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="hidden sm:flex w-full items-center justify-between px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-        {...hoverHandlers}
-      >
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-slate-400 text-[18px]">
-            calendar_month
-          </span>
-          <span className={value ? "text-slate-700 dark:text-slate-200" : "text-slate-400"}>
-            {displayText}
-          </span>
-        </div>
-        <span
-          className="material-symbols-outlined text-slate-400 text-[18px] transition-transform duration-200"
-          style={isOpen ? { transform: "rotate(180deg)" } : undefined}
+      {variant === "inline" ? (
+        /* Inline trigger — minimal badge for table cells */
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={`inline-flex items-center gap-1 text-sm font-medium cursor-pointer hover:ring-2 hover:ring-slate-200 px-2 py-1 rounded transition-all ${
+            overdue ? "text-red-600 bg-red-50" : "text-slate-600 hover:bg-slate-100"
+          }`}
+          {...hoverHandlers}
         >
-          expand_more
-        </span>
-      </button>
+          {overdue && <span className="material-symbols-outlined text-[12px] text-red-500">warning</span>}
+          <span>{displayText}</span>
+          <span className="material-symbols-outlined text-[10px] opacity-60">edit_calendar</span>
+        </button>
+      ) : (
+        <>
+          {/* Desktop trigger — full input style */}
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="hidden sm:flex w-full items-center justify-between px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            {...hoverHandlers}
+          >
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-slate-400 text-[18px]">
+                calendar_month
+              </span>
+              <span className={value ? "text-slate-700 dark:text-slate-200" : "text-slate-400"}>
+                {displayText}
+              </span>
+            </div>
+            <span
+              className="material-symbols-outlined text-slate-400 text-[18px] transition-transform duration-200"
+              style={isOpen ? { transform: "rotate(180deg)" } : undefined}
+            >
+              expand_more
+            </span>
+          </button>
 
-      {/* Mobile: native date input */}
-      <input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="sm:hidden w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-      />
+          {/* Mobile: native date input */}
+          <input
+            type="date"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="sm:hidden w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+          />
+        </>
+      )}
 
       {/* Calendar popover (desktop) — rendered via portal to escape overflow containers */}
       {isOpen && typeof document !== "undefined" && createPortal(

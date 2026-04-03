@@ -244,7 +244,7 @@ export default function TaskModal({
           </div>
 
           {/* Form body */}
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 custom-scroll">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 custom-scroll">
             {/* Title */}
             <input
               value={title}
@@ -260,7 +260,7 @@ export default function TaskModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Notas..."
               rows={2}
-              className="w-full bg-transparent border-none outline-none text-sm text-slate-600 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none"
+              className="w-full bg-transparent border-none outline-none text-sm text-slate-600 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none custom-scroll max-h-[120px] overflow-y-auto"
             />
 
             {/* URL migration banner */}
@@ -353,7 +353,6 @@ export default function TaskModal({
                 <DatePicker
                   value={deadline}
                   onChange={setDeadline}
-                  mode="click"
                 />
               </div>
             </div>
@@ -381,9 +380,10 @@ export default function TaskModal({
                   <button
                     type="button"
                     onClick={addLink}
-                    className="shrink-0 px-3 py-2 text-sm text-primary font-semibold hover:bg-primary/5 rounded-lg transition-colors"
+                    className="shrink-0 size-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    title="Agregar link"
                   >
-                    + Agregar
+                    <span className="material-symbols-outlined text-[20px]">add</span>
                   </button>
                 </div>
               </div>

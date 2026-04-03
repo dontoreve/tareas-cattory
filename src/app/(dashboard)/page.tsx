@@ -9,6 +9,8 @@ import { getPriorityConfig, PRIORITY_BG, PRIORITY_HOVER } from "@/lib/utils/prio
 import { formatDate, isOverdue } from "@/lib/utils/dates";
 import { matchesSearch } from "@/lib/utils/search";
 import { TAG_COLORS, getColorIndex } from "@/lib/utils/colors";
+import { createPortal } from "react-dom";
+import DatePicker from "@/components/ui/DatePicker";
 import type { Task } from "@/lib/types";
 
 // ── Drag-to-scroll with momentum ──────────────────────────────
@@ -86,6 +88,150 @@ function useDragScroll() {
   }, []);
 
   return ref;
+}
+
+// ── Inline Priority Dropdown (portaled) ───────────────────────
+function InlinePriorityDropdown({
+  anchorRect,
+  currentPriority,
+  onSelect,
+  onClose,
+}: {
+  anchorRect: DOMRect;
+  currentPriority: number;
+  onSelect: (p: number) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [onClose]);
+
+  const options = [
+    { value: 5, label: "P5 Critical" },
+    { value: 4, label: "P4 High" },
+    { value: 3, label: "P3 Medium" },
+    { value: 2, label: "P2 Low" },
+    { value: 1, label: "P1 Routine" },
+  ];
+
+  return createPortal(
+    <div
+      ref={ref}
+      className="fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-xl py-1 min-w-[160px]"
+      style={{ top: anchorRect.bottom + 4, left: anchorRect.left }}
+    >
+      {options.map((opt) => {
+        const cfg = getPriorityConfig(opt.value);
+        const bg = PRIORITY_BG[opt.value] ?? "";
+        const isActive = opt.value === currentPriority;
+        return (
+          <button
+            key={opt.value}
+            onMouseDown={(e) => { e.preventDefault(); onSelect(opt.value); }}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-bold transition-colors hover:bg-slate-50 ${isActive ? bg : "text-slate-600"}`}
+          >
+            <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+            {opt.label}
+            {isActive && <span className="material-symbols-outlined text-[14px] ml-auto">check</span>}
+          </button>
+        );
+      })}
+    </div>,
+    document.body
+  );
+}
+
+// ── Inline Assignee Dropdown (portaled) ───────────────────────
+function InlineAssigneeDropdown({
+  slot,
+  task,
+  teamMembers,
+  anchorRect,
+  onSelect,
+  onClose,
+}: {
+  slot: "primary" | "secondary";
+  task: Task;
+  teamMembers: { id: string; full_name: string | null; avatar_url: string | null }[];
+  anchorRect: DOMRect;
+  onSelect: (memberId: string | null) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [onClose]);
+
+  // Prevent assigning same person to both slots
+  const excludeId = slot === "primary" ? task.secondary_responsible_id : task.responsible_id;
+
+  return createPortal(
+    <div
+      ref={ref}
+      className="fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-xl py-1 min-w-[200px] max-h-[280px] overflow-y-auto custom-scroll"
+      style={{ top: anchorRect.bottom + 4, left: anchorRect.left }}
+    >
+      <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        {slot === "primary" ? "Responsable" : "2da Persona"}
+      </div>
+      {slot === "secondary" && (
+        <button
+          onMouseDown={(e) => { e.preventDefault(); onSelect(null); }}
+          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">person_remove</span>
+          Quitar 2da persona
+        </button>
+      )}
+      {teamMembers.map((m) => {
+        if (m.id === excludeId) return null;
+        const isActive = slot === "primary" ? m.id === task.responsible_id : m.id === task.secondary_responsible_id;
+        return (
+          <button
+            key={m.id}
+            onMouseDown={(e) => { e.preventDefault(); onSelect(m.id); }}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold transition-colors hover:bg-slate-50 ${isActive ? "bg-slate-100 text-primary" : "text-slate-700"}`}
+          >
+            {m.avatar_url ? (
+              <img src={m.avatar_url} className="size-5 rounded-full object-cover" alt="" />
+            ) : (
+              <div className="size-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-500">
+                {(m.full_name ?? "?").substring(0, 2).toUpperCase()}
+              </div>
+            )}
+            <span className="truncate">{m.full_name ?? "Sin nombre"}</span>
+            {isActive && <span className="material-symbols-outlined text-[14px] ml-auto">check</span>}
+          </button>
+        );
+      })}
+    </div>,
+    document.body
+  );
 }
 
 // ── Sorting: 4-tier by deadline ────────────────────────────────
@@ -204,6 +350,8 @@ function PriorityRow({
   onEdit,
   onComplete,
   onDelete,
+  onUpdateTask,
+  teamMembers,
 }: {
   task: Task;
   rank: number;
@@ -211,6 +359,8 @@ function PriorityRow({
   onEdit: (t: Task) => void;
   onComplete: (t: Task, el?: HTMLElement) => void;
   onDelete: (t: Task) => void;
+  onUpdateTask: (taskId: string, updates: Record<string, unknown>) => Promise<unknown>;
+  teamMembers: { id: string; full_name: string | null; avatar_url: string | null }[];
 }) {
   const pc = getPriorityConfig(task.priority);
   const pb = PRIORITY_BG[task.priority] ?? "";
@@ -221,6 +371,9 @@ function PriorityRow({
   const isTop = rank === 1;
   const isTop3 = rank <= 3;
   const statusDot = task.status === "in-progress" ? "bg-blue-500" : "bg-slate-400";
+
+  const [openDropdown, setOpenDropdown] = useState<null | "priority" | "assignee-primary" | "assignee-secondary">(null);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
 
   return (
     <tr
@@ -259,30 +412,51 @@ function PriorityRow({
           <span className="text-xs text-slate-300">Sin asignar</span>
         )}
       </td>
-      {/* Priority */}
-      <td className="px-3 py-4">
-        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${pb}`}>
+      {/* Priority — clickable */}
+      <td className="px-3 py-4" onClick={(e) => e.stopPropagation()}>
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold whitespace-nowrap cursor-pointer hover:ring-2 hover:ring-slate-200 transition-all ${pb}`}
+          onClick={(e) => {
+            setAnchorRect(e.currentTarget.getBoundingClientRect());
+            setOpenDropdown("priority");
+          }}
+        >
           <span className={`w-1.5 h-1.5 rounded-full ${pc.dot}`} />
           {pc.label}
+          <span className="material-symbols-outlined text-[10px] opacity-60">expand_more</span>
         </span>
-      </td>
-      {/* Deadline */}
-      <td className="px-3 py-4">
-        {task.deadline ? (
-          <span className={`inline-flex items-center gap-1 text-sm font-medium ${
-            overdue ? "text-red-600 bg-red-50 px-2 py-1 rounded" : "text-slate-600"
-          }`}>
-            {overdue && <span className="material-symbols-outlined text-[12px] text-red-500">warning</span>}
-            {formatDate(task.deadline)}
-          </span>
-        ) : (
-          <span className="text-xs text-slate-300">—</span>
+        {openDropdown === "priority" && anchorRect && (
+          <InlinePriorityDropdown
+            anchorRect={anchorRect}
+            currentPriority={task.priority}
+            onSelect={async (p) => { setOpenDropdown(null); await onUpdateTask(task.id, { priority: p }); }}
+            onClose={() => setOpenDropdown(null)}
+          />
         )}
       </td>
-      {/* Assignee */}
-      <td className="px-3 py-4">
+      {/* Deadline — inline DatePicker */}
+      <td className="px-3 py-4" onClick={(e) => e.stopPropagation()}>
+        <DatePicker
+          value={task.deadline ?? ""}
+          onChange={async (newDate) => { await onUpdateTask(task.id, { deadline: newDate || null }); }}
+          mode="click"
+          variant="inline"
+          overdue={overdue}
+          placeholder="Sin fecha"
+        />
+      </td>
+      {/* Assignee — clickable primary + secondary */}
+      <td className="px-3 py-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1">
-          <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-2 py-1 rounded-full pr-3 border border-slate-100/50">
+          {/* Primary */}
+          <div
+            className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-2 py-1 rounded-full pr-3 border border-slate-100/50 cursor-pointer hover:ring-2 hover:ring-slate-200 transition-all"
+            onClick={(e) => {
+              setAnchorRect(e.currentTarget.getBoundingClientRect());
+              setOpenDropdown("assignee-primary");
+            }}
+            title="Cambiar responsable"
+          >
             {task.profiles?.avatar_url ? (
               <img src={task.profiles.avatar_url} className="size-5 rounded-full object-cover" alt="" />
             ) : (
@@ -294,6 +468,54 @@ function PriorityRow({
               {task.profiles?.full_name ?? "—"}
             </span>
           </div>
+          {/* Secondary */}
+          {task.secondary_responsible_id && task.secondary_profile ? (
+            <div
+              className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-2 py-1 rounded-full pr-3 border border-slate-100/50 cursor-pointer hover:ring-2 hover:ring-slate-200 transition-all"
+              onClick={(e) => {
+                setAnchorRect(e.currentTarget.getBoundingClientRect());
+                setOpenDropdown("assignee-secondary");
+              }}
+              title="Cambiar 2da persona"
+            >
+              {task.secondary_profile.avatar_url ? (
+                <img src={task.secondary_profile.avatar_url} className="size-5 rounded-full object-cover" alt="" />
+              ) : (
+                <div className="size-5 rounded-full bg-white flex items-center justify-center text-[10px] font-bold shadow-sm">
+                  {(task.secondary_profile.full_name ?? "?").substring(0, 2).toUpperCase()}
+                </div>
+              )}
+              <span className="text-xs font-bold whitespace-nowrap">
+                {task.secondary_profile.full_name}
+              </span>
+            </div>
+          ) : (
+            <button
+              className="size-6 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-primary hover:text-primary transition-all cursor-pointer"
+              onClick={(e) => {
+                setAnchorRect(e.currentTarget.getBoundingClientRect());
+                setOpenDropdown("assignee-secondary");
+              }}
+              title="Agregar 2da persona"
+            >
+              <span className="material-symbols-outlined text-[12px]">add</span>
+            </button>
+          )}
+          {/* Assignee dropdown */}
+          {openDropdown?.startsWith("assignee-") && anchorRect && (
+            <InlineAssigneeDropdown
+              slot={openDropdown === "assignee-primary" ? "primary" : "secondary"}
+              task={task}
+              teamMembers={teamMembers}
+              anchorRect={anchorRect}
+              onSelect={async (memberId) => {
+                setOpenDropdown(null);
+                const field = openDropdown === "assignee-primary" ? "responsible_id" : "secondary_responsible_id";
+                await onUpdateTask(task.id, { [field]: memberId });
+              }}
+              onClose={() => setOpenDropdown(null)}
+            />
+          )}
         </div>
       </td>
       {/* Actions */}
@@ -427,6 +649,7 @@ export default function PriorityPage() {
     projects,
     completeTask,
     deleteTask,
+    updateTask,
     openTaskModal,
     openPreview,
     globalSearch: searchQuery,
@@ -574,7 +797,7 @@ export default function PriorityPage() {
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
             Proyectos
           </h3>
-          <div ref={projectsScrollRef} className="flex gap-4 overflow-x-auto pt-2 pb-4 -mx-1 px-1 custom-scroll cursor-grab" style={{ scrollBehavior: "auto", WebkitOverflowScrolling: "touch" }}>
+          <div ref={projectsScrollRef} className="flex gap-4 overflow-x-auto pt-2 pb-4 -mx-1 px-1 scrollbar-hide cursor-grab" style={{ scrollBehavior: "auto", WebkitOverflowScrolling: "touch" }}>
             {projectOverview.map((p) => (
               <ProjectCard
                 key={p.id}
@@ -706,6 +929,8 @@ export default function PriorityPage() {
                     onEdit={openTaskModal}
                     onComplete={handleComplete}
                     onDelete={handleDelete}
+                    onUpdateTask={updateTask}
+                    teamMembers={teamMembers}
                   />
                 ))
               )}

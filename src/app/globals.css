@@ -150,6 +150,10 @@ html, body {
   background: rgba(148,163,184,0.5);
 }
 
+/* ── Hidden scrollbar (scroll via drag/wheel only) ─────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* ── Kanban column scrollable (desktop) ──────────────────────── */
 @media (min-width: 768px) {
   .kanban-column {
