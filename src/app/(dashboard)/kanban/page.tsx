@@ -353,7 +353,7 @@ export default function KanbanPage() {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`kanban-column flex flex-col bg-slate-100/70 dark:bg-slate-800/40 backdrop-blur-sm border rounded-xl p-4 flex-1 min-w-0 transition-colors ${
+                  className={`kanban-column flex flex-col bg-slate-50 dark:bg-slate-800/40 border rounded-xl p-4 flex-1 min-w-0 transition-colors ${
                     snapshot.isDraggingOver
                       ? "border-primary/50 ring-2 ring-primary/20 bg-primary/5"
                       : "border-slate-200/50 dark:border-slate-700/30"

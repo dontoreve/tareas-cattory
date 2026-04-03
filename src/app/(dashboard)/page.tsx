@@ -488,30 +488,7 @@ export default function PriorityPage() {
           })}
         </div>
 
-        {/* Project filter chips — only projects where user has tasks */}
-        {projectOverview.filter((p) => p.id !== "__none__").length > 0 && (
-          <div className="flex gap-1.5 flex-wrap">
-            {projectOverview
-              .filter((p) => p.id !== "__none__")
-              .map((p) => {
-                const active = projectFilters.has(p.id);
-                const color = TAG_COLORS[getColorIndex(p.id)];
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => toggleProjectFilter(p.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                      active
-                        ? `${color.bg} ${color.text}`
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
-                    }`}
-                  >
-                    {p.name}
-                  </button>
-                );
-              })}
-          </div>
-        )}
+        {/* Project filter uses the cards above — no duplicate chips needed */}
 
         {/* User filter (admin only) */}
         {role === "admin" && teamMembers.length > 0 && (
@@ -542,8 +519,8 @@ export default function PriorityPage() {
       </div>
 
       {/* ── Priority Table (Desktop) ────────────────────────── */}
-      <div className="hidden md:block bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
-        <table className="w-full">
+      <div className="hidden md:block bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-x-auto">
+        <table className="w-full min-w-[700px]">
           <thead>
             <tr className="border-b border-slate-100 dark:border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
               <th className="py-3 px-4 text-center w-12">#</th>
