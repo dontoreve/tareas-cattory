@@ -24,6 +24,15 @@ export const PRIORITY_BG: Record<number, string> = {
   1: "text-slate-500 bg-slate-50",
 };
 
+// Hover classes for filter chips (idle state → colored on hover)
+export const PRIORITY_HOVER: Record<number, string> = {
+  5: "hover:text-red-600 hover:bg-red-50",
+  4: "hover:text-orange-600 hover:bg-orange-50",
+  3: "hover:text-amber-600 hover:bg-amber-50",
+  2: "hover:text-green-600 hover:bg-green-50",
+  1: "hover:text-slate-600 hover:bg-slate-100",
+};
+
 export const PRIORITY_TAG: Record<string, { bg: string; text: string }> = {
   red:    { bg: "bg-red-100",    text: "text-red-600" },
   orange: { bg: "bg-orange-100", text: "text-orange-600" },

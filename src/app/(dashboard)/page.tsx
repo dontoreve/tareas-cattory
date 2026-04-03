@@ -5,7 +5,7 @@ import { useDashboard } from "@/contexts/DashboardContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
 import { useCelebration } from "@/components/ui/CelebrationAnimation";
-import { getPriorityConfig, PRIORITY_BG } from "@/lib/utils/priority";
+import { getPriorityConfig, PRIORITY_BG, PRIORITY_HOVER } from "@/lib/utils/priority";
 import { formatDate, isOverdue } from "@/lib/utils/dates";
 import { matchesSearch } from "@/lib/utils/search";
 import { TAG_COLORS, getColorIndex } from "@/lib/utils/colors";
@@ -237,14 +237,10 @@ function PriorityRow({
         {rank}
       </td>
       {/* Title */}
-      <td className="px-3 py-4 overflow-hidden">
+      <td className="px-3 py-4 max-w-[280px]">
         <div className="flex items-center gap-2 min-w-0">
           <div className={`size-2 rounded-full ${statusDot} shrink-0`} />
-          <span
-            className="font-medium text-sm text-slate-800 whitespace-nowrap overflow-hidden"
-            title={task.title}
-            style={{ maskImage: task.title.length > 35 ? "linear-gradient(to right, black 80%, transparent 100%)" : undefined, WebkitMaskImage: task.title.length > 35 ? "linear-gradient(to right, black 80%, transparent 100%)" : undefined }}
-          >
+          <span className="font-medium text-sm text-slate-800 truncate" title={task.title}>
             {task.title}
           </span>
         </div>
@@ -591,15 +587,15 @@ export default function PriorityPage() {
       )}
 
       {/* ── Filters Bar ─────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         {/* Priority filter chips */}
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <button
             onClick={() => setPriorityFilter(null)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
               priorityFilter === null
-                ? "bg-primary text-white"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+                ? "bg-primary text-white shadow-sm"
+                : "bg-slate-100 text-slate-500 hover:bg-primary/10 hover:text-primary"
             }`}
           >
             Todas
@@ -611,10 +607,10 @@ export default function PriorityPage() {
               <button
                 key={p}
                 onClick={() => setPriorityFilter(active ? null : p)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
                   active
-                    ? PRIORITY_BG[p]
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    ? `${PRIORITY_BG[p]} shadow-sm`
+                    : `bg-slate-100 text-slate-500 ${PRIORITY_HOVER[p]}`
                 }`}
               >
                 {cfg.label}
@@ -623,21 +619,24 @@ export default function PriorityPage() {
           })}
         </div>
 
-        {/* Project filter uses the cards above — no duplicate chips needed */}
+        {/* Separator */}
+        {role === "admin" && teamMembers.length > 0 && (
+          <div className="w-px h-6 bg-slate-200" />
+        )}
 
         {/* User filter (admin only) */}
         {role === "admin" && teamMembers.length > 0 && (
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             {teamMembers.map((m) => {
               const active = userFilters.has(m.id);
               return (
                 <button
                   key={m.id}
                   onClick={() => toggleUserFilter(m.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
                     active
-                      ? "bg-primary/10 text-primary"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+                      ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                   }`}
                 >
                   <img
@@ -666,25 +665,16 @@ export default function PriorityPage() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse table-fixed">
-            <colgroup>
-              <col style={{ width: "42px" }} />
-              <col />
-              <col style={{ width: "100px" }} />
-              <col style={{ width: "95px" }} />
-              <col style={{ width: "130px" }} />
-              <col style={{ width: "140px" }} />
-              <col style={{ width: "110px" }} />
-            </colgroup>
+          <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-xs font-semibold text-slate-500 uppercase tracking-wider bg-slate-50">
-                <th className="px-2 py-4">#</th>
+                <th className="px-2 py-4 w-10">#</th>
                 <th className="px-3 py-4">Tarea</th>
-                <th className="px-3 py-4">Proyecto</th>
-                <th className="px-3 py-4">Prioridad</th>
-                <th className="px-3 py-4">Fecha Limite</th>
-                <th className="px-3 py-4">Responsable</th>
-                <th className="px-3 py-4 text-right">Acciones</th>
+                <th className="px-3 py-4 whitespace-nowrap">Proyecto</th>
+                <th className="px-3 py-4 whitespace-nowrap">Prioridad</th>
+                <th className="px-3 py-4 whitespace-nowrap">Fecha Limite</th>
+                <th className="px-3 py-4 whitespace-nowrap">Responsable</th>
+                <th className="px-3 py-4 text-right whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
