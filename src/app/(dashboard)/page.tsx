@@ -541,15 +541,15 @@ export default function PriorityPage() {
 
       {/* ── Priority Table (Desktop) ────────────────────────── */}
       <div className="hidden md:block bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="w-full table-fixed">
+        <table className="w-full" style={{ tableLayout: "fixed" }}>
           <colgroup>
-            <col className="w-12" />
+            <col style={{ width: 48 }} />
             <col />
-            <col className="w-[120px]" />
-            <col className="w-[110px]" />
-            <col className="w-[140px]" />
-            <col className="w-[130px]" />
-            <col className="w-[80px]" />
+            <col style={{ width: 120 }} />
+            <col style={{ width: 110 }} />
+            <col style={{ width: 150 }} />
+            <col style={{ width: 140 }} />
+            <col style={{ width: 90 }} />
           </colgroup>
           <thead>
             <tr className="border-b border-slate-100 text-xs text-slate-400 uppercase tracking-wider">
