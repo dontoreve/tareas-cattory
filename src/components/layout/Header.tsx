@@ -5,6 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import NotificationBell from "@/components/ui/NotificationBell";
 import { usePushNotifications } from "@/lib/hooks/usePushNotifications";
 
+// Key used to track if we've already auto-prompted this browser session
+const PUSH_PROMPTED_KEY = "cattory_push_prompted";
+
 const PAGE_TITLES: Record<string, string> = {
   "/": "Prioridades",
   "/kanban": "Mis Tareas",
@@ -23,8 +26,28 @@ export default function Header({
   const { user, profile, role, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showPushBanner, setShowPushBanner] = useState(false);
   const push = usePushNotifications();
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Auto-prompt for push notifications once per session if permission is 'default'
+  useEffect(() => {
+    if (!user?.id || push.loading) return;
+    if (push.permission !== "default" || push.subscribed) return;
+    const alreadyPrompted = sessionStorage.getItem(PUSH_PROMPTED_KEY);
+    if (alreadyPrompted) return;
+    // Show banner after a short delay so it doesn't block page load
+    const t = setTimeout(() => setShowPushBanner(true), 3000);
+    return () => clearTimeout(t);
+  }, [user?.id, push.loading, push.permission, push.subscribed]);
+
+  // If permission was already granted but not subscribed, subscribe silently
+  useEffect(() => {
+    if (!user?.id || push.loading) return;
+    if (push.permission === "granted" && !push.subscribed) {
+      push.subscribe(user.id);
+    }
+  }, [user?.id, push.loading, push.permission, push.subscribed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pageTitle = PAGE_TITLES[pathname] ?? "Cattory";
   const avatarUrl = profile?.avatar_url || "/logo.png";
@@ -50,7 +73,34 @@ export default function Header({
   }
 
   return (
-    <header className="h-16 border-b border-white/20 dark:border-slate-700/30 bg-white/50 dark:bg-slate-900/50 backdrop-blur-2xl px-4 md:px-8 flex items-center justify-between z-30">
+    <>
+    {/* Push notification banner */}
+    {showPushBanner && (
+      <div className="flex items-center gap-3 px-4 py-2.5 bg-primary text-white text-sm z-40">
+        <span className="material-symbols-outlined text-[20px]">notifications</span>
+        <span className="flex-1 font-medium">Activa las notificaciones — recibe alertas de tareas y tu resumen diario</span>
+        <button
+          onClick={async () => {
+            sessionStorage.setItem(PUSH_PROMPTED_KEY, "1");
+            setShowPushBanner(false);
+            if (user?.id) await push.subscribe(user.id);
+          }}
+          className="shrink-0 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg font-semibold transition-colors"
+        >
+          Activar
+        </button>
+        <button
+          onClick={() => {
+            sessionStorage.setItem(PUSH_PROMPTED_KEY, "1");
+            setShowPushBanner(false);
+          }}
+          className="shrink-0 text-white/70 hover:text-white"
+        >
+          <span className="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+    )}
+    <header className="h-16 border-b border-white/20 dark:border-slate-700/30 bg-white/50 dark:bg-slate-900/50 backdrop-blur-2xl px-4 md:px-8 flex items-center justify-between z-30" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
       {/* Left side: title + search */}
       <div className="flex items-center gap-3 md:gap-6 flex-1 min-w-0">
         <h2 className="text-lg md:text-xl font-bold whitespace-nowrap">
@@ -165,5 +215,6 @@ export default function Header({
         </div>
       </div>
     </header>
+    </>
   );
 }

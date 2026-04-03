@@ -133,6 +133,15 @@ export function useTasks({ userId }: UseTasksOptions) {
       }>
     ) => {
       suppressRealtime();
+
+      // Optimistic update — apply changes immediately so UI is instant
+      const original = tasks.find((t) => t.id === taskId);
+      if (original) {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? ({ ...t, ...updates } as Task) : t))
+        );
+      }
+
       const { data, error } = await supabase
         .from("tasks")
         .update(updates)
@@ -140,12 +149,20 @@ export function useTasks({ userId }: UseTasksOptions) {
         .select(TASK_SELECT)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Rollback on failure
+        if (original) {
+          setTasks((prev) => prev.map((t) => (t.id === taskId ? original : t)));
+        }
+        throw error;
+      }
+
+      // Merge full data (with joins like secondary_profile) from Supabase
       const updated = data as Task;
       setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)));
       return updated;
     },
-    [suppressRealtime]
+    [tasks, suppressRealtime]
   );
 
   const completeTask = useCallback(

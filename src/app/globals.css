@@ -36,6 +36,10 @@ html, body {
 /* ── Mobile touch ────────────────────────────────────────────── */
 @media (max-width: 639px) {
   * { touch-action: manipulation; }
+  /* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
+  input, textarea, select {
+    font-size: max(16px, 1em) !important;
+  }
 }
 
 /* ── Modal transitions ───────────────────────────────────────── */
@@ -129,11 +133,39 @@ html, body {
   100% { transform: scale(0) rotate(360deg); opacity: 0; }
 }
 
+/* ── Task completion animation ───────────────────────────────── */
+@keyframes taskCompleteRow {
+  0%   { opacity: 1; }
+  30%  { background: rgba(16, 185, 129, 0.08); }
+  100% { opacity: 0; }
+}
+.task-completing td {
+  text-decoration: line-through;
+  text-decoration-color: rgba(100, 116, 139, 0.5);
+  color: rgba(100, 116, 139, 0.6) !important;
+  transition: color 200ms ease, text-decoration 200ms ease;
+}
+.task-completing {
+  animation: taskCompleteRow 650ms ease-out forwards;
+  pointer-events: none;
+}
+.task-card-completing {
+  animation: taskCompleteRow 650ms ease-out forwards;
+  pointer-events: none;
+}
+.task-card-completing * {
+  text-decoration: line-through;
+  text-decoration-color: rgba(100, 116, 139, 0.4);
+  color: rgba(100, 116, 139, 0.5) !important;
+  transition: color 200ms ease;
+}
+
 /* ── Reduced motion ──────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .priority-badge-critical { animation: none; }
   tbody tr { animation: none !important; }
   .task-card { transition: none; }
+  .task-completing, .task-card-completing { animation: none; }
 }
 
 /* ── Custom scrollbar (thin) ─────────────────────────────────── */
@@ -164,7 +196,7 @@ html, body {
   .kanban-column {
     min-width: 320px;
     width: auto;
-    max-height: calc(100vh - 240px);
+    max-height: calc(100dvh - 240px);
   }
   .kanban-column > .kanban-cards {
     overflow-y: auto;

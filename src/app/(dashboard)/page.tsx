@@ -14,14 +14,21 @@ import DatePicker from "@/components/ui/DatePicker";
 import type { Task } from "@/lib/types";
 
 // ── Drag-to-scroll with momentum ──────────────────────────────
+// Uses a callback ref so listeners are attached/detached whenever the element
+// enters/leaves the DOM (fixes: scroll breaks when div mounts after initial render)
 function useDragScroll() {
-  const ref = useRef<HTMLDivElement>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    const el = ref.current;
+  const callbackRef = useCallback((el: HTMLDivElement | null) => {
+    // Always cleanup previous listeners first
+    if (cleanupRef.current) {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    }
     if (!el) return;
-
+    // Capture non-null reference for closures (TypeScript narrowing)
     const c = el;
+
     let isDown = false;
     let hasDragged = false;
     let startX = 0;
@@ -63,7 +70,6 @@ function useDragScroll() {
     function onMouseMove(e: MouseEvent) {
       if (!isDown) return;
       const dx = e.clientX - startX;
-      // 3px deadzone to distinguish click from drag
       if (!hasDragged && Math.abs(dx) < 3) return;
       hasDragged = true;
       e.preventDefault();
@@ -72,7 +78,6 @@ function useDragScroll() {
       c.scrollLeft = scrollLeft - dx * 1.5;
     }
 
-    // Suppress click on cards after drag
     function onClick(e: MouseEvent) {
       if (hasDragged) {
         e.stopPropagation();
@@ -82,7 +87,6 @@ function useDragScroll() {
     }
 
     function onWheel(e: WheelEvent) {
-      // Only hijack if container is scrollable
       if (c.scrollWidth <= c.clientWidth) return;
       e.preventDefault();
       cancelAnimationFrame(momentumId);
@@ -96,10 +100,9 @@ function useDragScroll() {
     c.addEventListener("mousemove", onMouseMove);
     c.addEventListener("click", onClick, true);
     c.addEventListener("wheel", onWheel, { passive: false });
-    // Catch mouseup outside container
     window.addEventListener("mouseup", stopDrag);
 
-    return () => {
+    cleanupRef.current = () => {
       c.removeEventListener("mousedown", onMouseDown);
       c.removeEventListener("mouseleave", stopDrag);
       c.removeEventListener("mouseup", stopDrag);
@@ -111,7 +114,7 @@ function useDragScroll() {
     };
   }, []);
 
-  return ref;
+  return callbackRef;
 }
 
 // ── Inline Priority Dropdown (portaled) ───────────────────────
@@ -370,6 +373,7 @@ function PriorityRow({
   onDelete,
   onUpdateTask,
   teamMembers,
+  isCompleting = false,
 }: {
   task: Task;
   rank: number;
@@ -379,6 +383,7 @@ function PriorityRow({
   onDelete: (t: Task) => void;
   onUpdateTask: (taskId: string, updates: Record<string, unknown>) => Promise<unknown>;
   teamMembers: { id: string; full_name: string | null; avatar_url: string | null }[];
+  isCompleting?: boolean;
 }) {
   const pc = getPriorityConfig(task.priority);
   const pb = PRIORITY_BG[task.priority] ?? "";
@@ -395,9 +400,9 @@ function PriorityRow({
 
   return (
     <tr
-      className={`group hover:bg-slate-50/50 transition-colors cursor-pointer ${isTop ? "border-l-4 border-primary bg-primary/5" : ""}`}
-      style={{ animation: `rowSlideIn 200ms ease-out both`, animationDelay: `${Math.min((rank - 1) * 30, 300)}ms` }}
-      onClick={() => onPreview(task)}
+      className={`group hover:bg-slate-50/50 transition-colors cursor-pointer ${isTop ? "border-l-4 border-primary bg-primary/5" : ""} ${isCompleting ? "task-completing" : ""}`}
+      style={{ animation: isCompleting ? undefined : `rowSlideIn 200ms ease-out both`, animationDelay: isCompleting ? undefined : `${Math.min((rank - 1) * 30, 300)}ms` }}
+      onClick={() => !isCompleting && onPreview(task)}
     >
       {/* Rank */}
       <td className={`px-2 py-4 text-center select-none ${
@@ -489,11 +494,12 @@ function PriorityRow({
               </div>
             );
           })()}
-          {/* Secondary */}
-          {task.secondary_responsible_id && task.secondary_profile ? (() => {
-            const name = task.secondary_profile.full_name ?? "?";
-            const initials = name.length > 1 ? name.substring(0, 2).toUpperCase() : "??";
+          {/* Secondary — look up from teamMembers first, fall back to join data */}
+          {task.secondary_responsible_id ? (() => {
             const cIdx = teamMembers.findIndex((m) => m.id === task.secondary_responsible_id);
+            const member = teamMembers[cIdx];
+            const name = member?.full_name ?? task.secondary_profile?.full_name ?? "?";
+            const avatarUrl = member?.avatar_url ?? task.secondary_profile?.avatar_url;
             const c = TAG_COLORS[(cIdx + 3) % TAG_COLORS.length] ?? TAG_COLORS[0];
             return (
               <div
@@ -505,7 +511,7 @@ function PriorityRow({
                 }}
                 title={name}
               >
-                <img src={task.secondary_profile.avatar_url || "/logo.png"} className="size-8 rounded-full object-cover" alt="" />
+                <img src={avatarUrl || "/logo.png"} className="size-8 rounded-full object-cover" alt="" />
               </div>
             );
           })() : (
@@ -576,6 +582,7 @@ function PriorityCard({
   onEdit,
   onComplete,
   onDelete,
+  isCompleting = false,
 }: {
   task: Task;
   rank: number;
@@ -583,6 +590,7 @@ function PriorityCard({
   onEdit: (t: Task) => void;
   onComplete: (t: Task, el?: HTMLElement) => void;
   onDelete: (t: Task) => void;
+  isCompleting?: boolean;
 }) {
   const pc = getPriorityConfig(task.priority);
   const pb = PRIORITY_BG[task.priority] ?? "";
@@ -594,8 +602,8 @@ function PriorityCard({
 
   return (
     <div
-      className="p-4 flex flex-col gap-2 bg-white border-b border-slate-100 cursor-pointer active:bg-slate-50 transition-colors"
-      onClick={() => onPreview(task)}
+      className={`p-4 flex flex-col gap-2 bg-white border-b border-slate-100 cursor-pointer active:bg-slate-50 transition-colors ${isCompleting ? "task-card-completing" : ""}`}
+      onClick={() => !isCompleting && onPreview(task)}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -682,9 +690,13 @@ export default function PriorityPage() {
   const [userFilters, setUserFilters] = useState<Set<string>>(new Set());
   const [viewAll, setViewAll] = useState(false);
 
+  // Track tasks playing their completion animation
+  const [completingTaskIds, setCompletingTaskIds] = useState<Set<string>>(new Set());
+
   // Filter + sort tasks
   const sortedTasks = useMemo(() => {
-    let filtered = tasks.filter((t) => t.status !== "done");
+    // Include tasks that are animating out (status === "done" but still in completingTaskIds)
+    let filtered = tasks.filter((t) => t.status !== "done" || completingTaskIds.has(t.id));
 
     // Members always see only their own tasks (not configurable)
     if (role === "member" && user?.id) {
@@ -733,7 +745,7 @@ export default function PriorityPage() {
     const deduped = [...new Map(filtered.map((t) => [t.id, t])).values()];
 
     return sortTasksDynamic(deduped);
-  }, [tasks, projectFilters, priorityFilter, userFilters, role, searchQuery]);
+  }, [tasks, completingTaskIds, projectFilters, priorityFilter, userFilters, role, searchQuery]);
 
   const displayTasks = viewAll ? sortedTasks : sortedTasks.slice(0, 10);
 
@@ -762,11 +774,27 @@ export default function PriorityPage() {
   const { teamMembers } = useDashboard();
 
   async function handleComplete(task: Task, el?: HTMLElement) {
+    // Start exit animation
+    setCompletingTaskIds((prev) => new Set([...prev, task.id]));
     try {
       await completeTask(task.id);
       const firstName = profile?.full_name?.split(" ")[0];
-      celebrate(el, firstName);
+      // Let animation play before celebrating and removing from list
+      setTimeout(() => {
+        celebrate(el, firstName);
+        setCompletingTaskIds((prev) => {
+          const next = new Set(prev);
+          next.delete(task.id);
+          return next;
+        });
+      }, 650);
     } catch {
+      // On error remove from animation state and notify
+      setCompletingTaskIds((prev) => {
+        const next = new Set(prev);
+        next.delete(task.id);
+        return next;
+      });
       showToast("Error al completar la tarea");
     }
   }
@@ -949,6 +977,7 @@ export default function PriorityPage() {
                     onDelete={handleDelete}
                     onUpdateTask={updateTask}
                     teamMembers={teamMembers}
+                    isCompleting={completingTaskIds.has(task.id)}
                   />
                 ))
               )}
@@ -997,6 +1026,7 @@ export default function PriorityPage() {
               onEdit={openTaskModal}
               onComplete={handleComplete}
               onDelete={handleDelete}
+              isCompleting={completingTaskIds.has(task.id)}
             />
           ))
         )}

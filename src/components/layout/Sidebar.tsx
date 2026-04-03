@@ -81,7 +81,7 @@ export default function Sidebar({
     : "";
 
   return (
-    <aside className="hidden md:flex w-64 flex-col fixed h-[calc(100vh-24px)] top-3 left-3 z-20 shrink-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/30 dark:border-slate-700/40 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
+    <aside className="hidden md:flex w-64 flex-col fixed h-[calc(100dvh-24px)] top-3 left-3 z-20 shrink-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/30 dark:border-slate-700/40 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
       {/* Logo + greeting */}
       <div className="p-8 flex items-center gap-3">
         <img src="/logo.png" className="h-10 object-contain" alt="Cattory Logo" />

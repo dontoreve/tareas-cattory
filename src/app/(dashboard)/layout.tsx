@@ -139,7 +139,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark">
+    <div className="flex h-dvh overflow-hidden bg-background-light dark:bg-background-dark">
       <Sidebar
         onTeamClick={() => setTeamModalOpen(true)}
         onNewProjectClick={() => setProjectsModalOpen(true)}
