@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, type FormEvent } from "react";
+import { useState, useEffect, useCallback, useRef, type FormEvent, type PointerEvent as ReactPointerEvent } from "react";
 import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
 import { TAG_COLORS } from "@/lib/utils/colors";
 import type { Task, TaskLink, Profile, Project } from "@/lib/types";
@@ -282,10 +282,31 @@ export default function TaskModal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* ─── MOBILE — Apple Reminders inspired ──────────────────── */}
-      <div className="relative w-full sm:hidden bg-slate-100 rounded-t-[20px] shadow-2xl flex flex-col" style={{ height: "calc(100dvh - env(safe-area-inset-top) - 0.5rem)" }}>
+      <div className="relative w-full sm:hidden bg-slate-100 shadow-2xl flex flex-col h-dvh">
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          {/* Drag handle */}
-          <div className="flex justify-center pt-2 pb-0.5 shrink-0">
+          {/* Drag handle — functional: swipe down to close */}
+          <div
+            className="flex justify-center shrink-0 cursor-grab active:cursor-grabbing"
+            style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.25rem" }}
+            onPointerDown={(e: ReactPointerEvent) => {
+              const startY = e.clientY;
+              const el = e.currentTarget.parentElement?.parentElement;
+              if (!el) return;
+              const handleMove = (ev: globalThis.PointerEvent) => {
+                const dy = ev.clientY - startY;
+                if (dy > 0) el.style.transform = `translateY(${dy}px)`;
+              };
+              const handleUp = (ev: globalThis.PointerEvent) => {
+                const dy = ev.clientY - startY;
+                el.style.transform = "";
+                if (dy > 100) onClose();
+                document.removeEventListener("pointermove", handleMove);
+                document.removeEventListener("pointerup", handleUp);
+              };
+              document.addEventListener("pointermove", handleMove);
+              document.addEventListener("pointerup", handleUp);
+            }}
+          >
             <div className="w-9 h-[5px] rounded-full bg-slate-300" />
           </div>
 
@@ -323,8 +344,9 @@ export default function TaskModal({
                   placeholder="Nombre de la tarea"
                   required
                   autoFocus
-                  autoComplete="off"
-                  autoCorrect="off"
+                  name="task-title-field"
+                  autoComplete="one-time-code"
+                  data-form-type="other"
                   className="w-full text-[22px] font-bold bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none placeholder:text-slate-300 text-slate-900 caret-primary"
                 />
               </div>
@@ -503,7 +525,9 @@ export default function TaskModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Nombre de la tarea"
               required
-              autoComplete="off"
+              name="task-title-field"
+              autoComplete="one-time-code"
+              data-form-type="other"
               className="w-full text-lg font-semibold bg-transparent border-none outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600"
             />
             <textarea
