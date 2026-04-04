@@ -68,10 +68,12 @@ export default function TaskModal({
   const [linkUrl, setLinkUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [teamError, setTeamError] = useState(false);
+  const [projectError, setProjectError] = useState(false);
   const [dateError, setDateError] = useState(false);
 
   const linkUrlRef = useRef<HTMLInputElement>(null);
   const teamSectionRef = useRef<HTMLDivElement>(null);
+  const projectRowRef = useRef<HTMLDivElement>(null);
   const dateRowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -171,6 +173,13 @@ export default function TaskModal({
       setTimeout(() => setTeamError(false), 2000);
       return;
     }
+    // Validate project
+    if (!projectId) {
+      setProjectError(true);
+      projectRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => setProjectError(false), 2000);
+      return;
+    }
     // Validate deadline
     if (!deadline) {
       setDateError(true);
@@ -202,7 +211,7 @@ export default function TaskModal({
   }
 
   const projectOptions: SelectOption[] = [
-    { value: "", label: "Sin proyecto" },
+    { value: "", label: "Elegir proyecto..." },
     ...projects.map((p) => ({ value: p.id, label: p.name })),
   ];
 
@@ -416,20 +425,27 @@ export default function TaskModal({
             {/* ── Card 3: Details — native <select> for iOS picker wheel ── */}
             <div className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
               {/* Project */}
-              <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
-                <span className="material-symbols-outlined text-slate-400 text-[18px]">folder</span>
-                <span className="text-[15px] text-slate-700 flex-1">Proyecto</span>
-                <select
-                  value={projectId}
-                  onChange={(e) => setProjectId(e.target.value)}
-                  className="bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] text-primary font-medium text-right appearance-none pr-0 max-w-[50%]"
-                >
-                  {projectOptions.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined text-slate-300 text-[16px] -ml-1">chevron_right</span>
-              </label>
+              <div
+                ref={projectRowRef}
+                className={`transition-all duration-300 ${projectError ? "ring-2 ring-red-400 rounded-t-2xl animate-[shake_0.4s_ease-in-out]" : ""}`}
+              >
+                <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
+                  <span className={`material-symbols-outlined text-[18px] ${projectError ? "text-red-400" : "text-slate-400"}`}>folder</span>
+                  <span className={`text-[15px] flex-1 ${projectError ? "text-red-500" : "text-slate-700"}`}>
+                    {projectError ? "Elige un proyecto" : "Proyecto"}
+                  </span>
+                  <select
+                    value={projectId}
+                    onChange={(e) => { setProjectId(e.target.value); setProjectError(false); }}
+                    className={`bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] font-medium text-right appearance-none pr-0 max-w-[50%] ${projectId ? "text-primary" : "text-slate-400"}`}
+                  >
+                    {projectOptions.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  <span className="material-symbols-outlined text-slate-300 text-[16px] -ml-1">chevron_right</span>
+                </label>
+              </div>
               <div className="h-px bg-slate-100 ml-12" />
 
               {/* Status */}
@@ -552,9 +568,11 @@ export default function TaskModal({
                 </div>
                 {teamPicker}
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Proyecto</label>
-                <CustomSelect value={projectId} onChange={setProjectId} options={projectOptions} placeholder="Sin proyecto" />
+              <div ref={projectRowRef} className={`transition-all duration-300 ${projectError ? "ring-2 ring-red-400 rounded-xl p-2 animate-[shake_0.4s_ease-in-out]" : ""}`}>
+                <label className={`text-xs font-semibold uppercase tracking-wider mb-1.5 block ${projectError ? "text-red-500" : "text-slate-400"}`}>
+                  {projectError ? "Proyecto — Elige un proyecto" : "Proyecto"}
+                </label>
+                <CustomSelect value={projectId} onChange={(v) => { setProjectId(v); setProjectError(false); }} options={projectOptions} placeholder="Elegir proyecto..." />
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Estado</label>
