@@ -707,6 +707,7 @@ export default function PriorityPage() {
     tasks,
     tasksLoading,
     projects,
+    visibleProjects,
     completeTask,
     deleteTask,
     updateTask,
@@ -797,9 +798,9 @@ export default function PriorityPage() {
   const projectOverview = useMemo(() => {
     const byProject = new Map<string, { name: string; tasks: Task[] }>();
 
-    for (const p of projects) {
+    for (const p of visibleProjects) {
       const projectTasks = tasks.filter((t) => t.project_id === p.id);
-      if (projectTasks.length === 0) continue; // Skip projects with no tasks for this user
+      if (projectTasks.length === 0) continue;
       byProject.set(p.id, { name: p.name, tasks: projectTasks });
     }
 
@@ -812,7 +813,7 @@ export default function PriorityPage() {
     return [...byProject.entries()]
       .map(([id, data]) => ({ id, ...data }))
       .sort((a, b) => b.tasks.length - a.tasks.length);
-  }, [tasks, projects]);
+  }, [tasks, visibleProjects]);
 
   // Team members for filter
   const { teamMembers } = useDashboard();

@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +19,8 @@ interface DashboardState {
   tasks: Task[];
   tasksLoading: boolean;
   projects: Project[];
+  /** Projects filtered by member access (admins see all) */
+  visibleProjects: Project[];
   projectsLoading: boolean;
   teamMembers: Profile[];
   membersLoading: boolean;
@@ -98,6 +101,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const { members: teamMembers, loading: membersLoading, refetch: refetchMembers } =
     useTeamMembers(userId);
 
+  // Projects filtered by access (members only see assigned projects)
+  const visibleProjects = useMemo(() => {
+    if (role === "admin" || !userId) return projects;
+    return getProjectsForMember(userId);
+  }, [projects, role, userId, getProjectsForMember]);
+
   // Task modal state
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -132,6 +141,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         tasks,
         tasksLoading,
         projects,
+        visibleProjects,
         projectsLoading,
         teamMembers,
         membersLoading,

@@ -36,6 +36,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     reopenTask,
     deleteTask,
     memberAccess,
+    visibleProjects,
     getProjectsForMember,
     refetchProjects,
     refetchMembers,
@@ -48,11 +49,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     closePreview,
   } = useDashboard();
 
-  // Members only see their own accessible projects in the task modal
-  const modalProjects =
-    role === "member" && user?.id
-      ? getProjectsForMember(user.id)
-      : projects;
+  // Members only see their accessible projects in the task modal
+  const modalProjects = visibleProjects;
   const { showToast } = useToast();
   const celebrate = useCelebration();
 
