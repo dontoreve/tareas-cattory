@@ -45,6 +45,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full bg-background-light font-display text-slate-900 antialiased">
+        {/* Detect when Material Symbols font loads to reveal icons */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.fonts.ready.then(function(){document.documentElement.classList.add('fonts-loaded')});`,
+          }}
+        />
         <ServiceWorkerRegistration />
         {children}
       </body>

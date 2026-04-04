@@ -31,6 +31,12 @@ html, body {
   vertical-align: middle;
   line-height: 1;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  /* Hide fallback text until icon font loads — prevents "no", "ch", "ad" flash */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.fonts-loaded .material-symbols-outlined {
+  opacity: 1;
 }
 
 /* ── Mobile touch ────────────────────────────────────────────── */
