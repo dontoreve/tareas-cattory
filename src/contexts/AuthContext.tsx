@@ -100,14 +100,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  // Refetch profile on app focus (PWA resume)
+  // Refetch profile on app resume (iOS PWA needs focus + pageshow, not just visibilitychange)
   useEffect(() => {
     if (!user) return;
-    function handleVisibility() {
-      if (document.visibilityState === "visible" && user) fetchProfile(user.id);
+    let last = Date.now();
+    function refetchIfStale() {
+      if (Date.now() - last < 3000) return;
+      last = Date.now();
+      fetchProfile(user!.id);
     }
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", refetchIfStale);
+    window.addEventListener("pageshow", refetchIfStale);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refetchIfStale();
+    });
+    return () => {
+      window.removeEventListener("focus", refetchIfStale);
+      window.removeEventListener("pageshow", refetchIfStale);
+    };
   }, [user, fetchProfile]);
 
   const signOut = useCallback(async () => {

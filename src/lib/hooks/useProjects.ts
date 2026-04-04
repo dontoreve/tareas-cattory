@@ -61,17 +61,27 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
     };
   }, [userId, fetchProjects, fetchMemberAccess]);
 
-  // Refetch on app focus (safety net for PWA / mobile tab switch)
+  // Refetch on app resume (PWA standalone on iOS doesn't fire visibilitychange reliably)
   useEffect(() => {
     if (!userId) return;
-    function handleVisibility() {
-      if (document.visibilityState === "visible") {
-        fetchProjects();
-        fetchMemberAccess();
-      }
+    let last = Date.now();
+    function refetchIfStale() {
+      // Only refetch if at least 3s have passed (avoid double-fires)
+      if (Date.now() - last < 3000) return;
+      last = Date.now();
+      fetchProjects();
+      fetchMemberAccess();
     }
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    // Multiple events for maximum iOS PWA compatibility
+    window.addEventListener("focus", refetchIfStale);
+    window.addEventListener("pageshow", refetchIfStale);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refetchIfStale();
+    });
+    return () => {
+      window.removeEventListener("focus", refetchIfStale);
+      window.removeEventListener("pageshow", refetchIfStale);
+    };
   }, [userId, fetchProjects, fetchMemberAccess]);
 
   /** Get projects visible to a specific member */
