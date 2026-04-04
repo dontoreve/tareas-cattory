@@ -64,11 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       const u = session?.user ?? null;
       setUser(u);
       if (u) {
         fetchProfile(u.id);
+        // Clean up OAuth tokens from URL hash (left by Supabase after Google login)
+        if (event === "SIGNED_IN" && typeof window !== "undefined" && window.location.hash.includes("access_token")) {
+          window.history.replaceState({}, "", window.location.pathname + window.location.search);
+        }
       } else {
         setProfile(null);
       }

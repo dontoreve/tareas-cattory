@@ -13,7 +13,7 @@ import { matchesSearch } from "@/lib/utils/search";
 
 export default function BacklogPage() {
   const router = useRouter();
-  const { role } = useAuth();
+  const { role, loading: authLoading } = useAuth();
   const { tasks, projects, teamMembers, reopenTask, deleteTask, openPreview, globalSearch } =
     useDashboard();
   const { showToast } = useToast();
@@ -25,7 +25,8 @@ export default function BacklogPage() {
   const searchQuery = globalSearch || localSearch;
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Admin-only guard
+  // Admin-only guard — wait for auth to resolve before evaluating role
+  if (authLoading) return null;
   if (role !== "admin") {
     router.replace("/");
     return null;

@@ -63,12 +63,6 @@ export function useTasks({ userId }: UseTasksOptions) {
         () => {
           if (Date.now() < suppressUntil.current) return;
           fetchTasks();
-          // Relay broadcast so RLS-blocked users also refresh
-          supabase.channel("task-global-updates").send({
-            type: "broadcast",
-            event: "tasks_changed",
-            payload: {},
-          });
         }
       )
       .subscribe();

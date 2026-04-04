@@ -132,6 +132,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   async function handleDeleteFromPreview(task: { id: string }) {
     try {
       await deleteTask(task.id);
+      closePreview();
       showToast("Tarea eliminada", "success");
     } catch {
       showToast("Error al eliminar la tarea");

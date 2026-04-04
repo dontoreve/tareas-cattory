@@ -117,15 +117,19 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
   const deleteProject = useCallback(
     async (projectId: string) => {
       // Unassign tasks from this project
-      await supabase
+      const { error: tasksError } = await supabase
         .from("tasks")
         .update({ project_id: null })
         .eq("project_id", projectId);
+      if (tasksError) throw tasksError;
+
       // Remove member access
-      await supabase
+      const { error: accessError } = await supabase
         .from("member_project_access")
         .delete()
         .eq("project_id", projectId);
+      if (accessError) throw accessError;
+
       // Delete the project
       const { error } = await supabase
         .from("projects")
