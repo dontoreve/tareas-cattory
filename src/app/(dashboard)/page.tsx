@@ -13,6 +13,7 @@ import { createPortal } from "react-dom";
 import DatePicker from "@/components/ui/DatePicker";
 import { DockChip, DockGroup } from "@/components/ui/DockFilterBar";
 import type { Task } from "@/lib/types";
+import SwipeableRow from "@/components/ui/SwipeableRow";
 
 // ── Drag-to-scroll with momentum ──────────────────────────────
 // Uses a callback ref so listeners are attached/detached whenever the element
@@ -601,67 +602,103 @@ function PriorityCard({
     ? TAG_COLORS[getColorIndex(task.project_id)]
     : null;
 
+  const swipeActions = [
+    {
+      icon: "edit",
+      label: "Editar",
+      color: "bg-blue-500",
+      hoverColor: "bg-blue-600",
+      textColor: "text-white",
+      onClick: () => onEdit(task),
+    },
+    {
+      icon: "check_circle",
+      label: "Listo",
+      color: "bg-emerald-500",
+      hoverColor: "bg-emerald-600",
+      textColor: "text-white",
+      onClick: () => onComplete(task),
+    },
+    {
+      icon: "delete",
+      label: "Eliminar",
+      color: "bg-red-500",
+      hoverColor: "bg-red-600",
+      textColor: "text-white",
+      onClick: () => onDelete(task),
+    },
+  ];
+
   return (
-    <div
-      className={`p-4 flex flex-col gap-2 bg-white border-b border-slate-100 cursor-pointer active:bg-slate-50 transition-colors ${isCompleting ? "task-card-completing" : ""}`}
-      onClick={() => !isCompleting && onPreview(task)}
+    <SwipeableRow
+      actions={swipeActions}
+      onTap={() => !isCompleting && onPreview(task)}
+      className={`border-b border-slate-100 ${isCompleting ? "task-card-completing" : ""}`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className={`size-2 rounded-full shrink-0 ${statusDot}`} />
-          <span className="font-semibold text-sm truncate">{task.title}</span>
-        </div>
-        <div className="flex items-center gap-0.5 shrink-0 ml-1">
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 active:scale-90 transition-all duration-200"
-            title="Editar"
-          >
-            <span className="material-symbols-outlined text-[20px]">edit</span>
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onComplete(task, e.currentTarget); }}
-            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 active:scale-90 transition-all duration-200"
-            title="Completar"
-          >
-            <span className="material-symbols-outlined text-[20px]">check_circle</span>
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(task); }}
-            className="size-9 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-500/10 active:scale-90 transition-all duration-200"
-            title="Eliminar"
-          >
-            <span className="material-symbols-outlined text-[20px]">delete</span>
-          </button>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 flex-wrap">
-        {task.projects?.name && color ? (
-          <span className={`px-2 py-0.5 rounded text-xs font-bold ${color.bg} ${color.text}`}>
-            {task.projects.name}
-          </span>
-        ) : null}
-        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${pb}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${pc.dot}`} />
-          {pc.label}
-        </span>
-        {task.deadline && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-            overdue ? "text-red-600 bg-red-50" : "text-slate-500 bg-slate-100"
-          }`}>
-            {formatDate(task.deadline)}
-          </span>
-        )}
-        {task.profiles?.full_name && (() => {
-          const c = TAG_COLORS[getColorIndex(task.responsible_id)] ?? TAG_COLORS[0];
-          return (
-            <div className={`size-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm ${c.bg} ${c.text}`} title={task.profiles.full_name}>
-              <img src={task.profiles.avatar_url || "/logo.png"} className="size-7 rounded-full object-cover" alt="" />
+      <div className="px-4 py-3 flex items-center gap-3">
+        {/* Left: Avatars stacked */}
+        <div className="flex flex-col items-center shrink-0" style={{ width: 40 }}>
+          {/* Primary assignee */}
+          {task.profiles?.full_name ? (() => {
+            const c = TAG_COLORS[getColorIndex(task.responsible_id)] ?? TAG_COLORS[0];
+            return (
+              <div className="relative">
+                <img
+                  src={task.profiles.avatar_url || "/logo.png"}
+                  className="size-9 rounded-full object-cover ring-2 ring-white shadow-sm"
+                  alt={task.profiles.full_name}
+                  title={task.profiles.full_name}
+                />
+                {/* Secondary assignee — overlapping */}
+                {task.secondary_profile?.full_name && (
+                  <img
+                    src={task.secondary_profile.avatar_url || "/logo.png"}
+                    className="size-6 rounded-full object-cover ring-2 ring-white shadow-sm absolute -bottom-1 -right-1"
+                    alt={task.secondary_profile.full_name}
+                    title={`Apoyo: ${task.secondary_profile.full_name}`}
+                  />
+                )}
+              </div>
+            );
+          })() : (
+            <div className="size-9 rounded-full bg-slate-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-slate-400 text-[18px]">person</span>
             </div>
-          );
-        })()}
+          )}
+        </div>
+
+        {/* Center: Title + metadata */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+          {/* Title row */}
+          <div className="flex items-center gap-1.5">
+            <div className={`size-2 rounded-full shrink-0 ${statusDot}`} />
+            <span className="font-semibold text-sm leading-tight line-clamp-2">{task.title}</span>
+          </div>
+          {/* Chips row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {task.projects?.name && color ? (
+              <span className={`px-1.5 py-0.5 rounded text-[11px] font-bold leading-none ${color.bg} ${color.text} max-w-[120px] truncate`}>
+                {task.projects.name}
+              </span>
+            ) : null}
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold leading-none ${pb}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${pc.dot}`} />
+              {pc.label}
+            </span>
+            {task.deadline && (
+              <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded leading-none ${
+                overdue ? "text-red-600 bg-red-50" : "text-slate-500 bg-slate-100"
+              }`}>
+                {formatDate(task.deadline)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Swipe hint chevron */}
+        <span className="material-symbols-outlined text-slate-300 text-[18px] shrink-0">chevron_left</span>
       </div>
-    </div>
+    </SwipeableRow>
   );
 }
 
