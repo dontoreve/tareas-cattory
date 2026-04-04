@@ -6,9 +6,8 @@ import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-m
 interface SwipeAction {
   icon: string;
   label: string;
-  color: string; // tailwind bg class
-  hoverColor: string; // tailwind hover bg class
-  textColor: string; // tailwind text class
+  color: string; // tailwind classes for the icon circle bg
+  textColor: string; // tailwind text class for the icon
   onClick: () => void;
 }
 
@@ -29,17 +28,22 @@ export default function SwipeableRow({
   children,
   actions,
   className = "",
-  actionWidth = 72,
+  actionWidth = 64,
   onTap,
 }: SwipeableRowProps) {
   const x = useMotionValue(0);
   const [isOpen, setIsOpen] = useState(false);
+  const isDragging = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const totalWidth = actions.length * actionWidth;
 
-  // Opacity for action buttons — fade in as user swipes
-  const actionsOpacity = useTransform(x, [-totalWidth, -totalWidth * 0.3, 0], [1, 0.6, 0]);
+  // Scale action buttons as they reveal
+  const actionsScale = useTransform(x, [-totalWidth, -totalWidth * 0.5, 0], [1, 0.85, 0.5]);
+
+  function handleDragStart() {
+    isDragging.current = true;
+  }
 
   function handleDragEnd(_: unknown, info: PanInfo) {
     const velocity = info.velocity.x;
@@ -53,6 +57,9 @@ export default function SwipeableRow({
       animate(x, 0, { type: "spring", bounce: 0.15, duration: 0.3 });
       setIsOpen(false);
     }
+
+    // Reset dragging flag after a short delay to prevent tap from firing
+    setTimeout(() => { isDragging.current = false; }, 50);
   }
 
   function close() {
@@ -65,12 +72,22 @@ export default function SwipeableRow({
     close();
   }
 
+  function handleTap() {
+    // Don't trigger tap if we were just dragging
+    if (isDragging.current) return;
+    if (isOpen) {
+      close();
+    } else {
+      onTap?.();
+    }
+  }
+
   return (
     <div ref={containerRef} className={`relative overflow-hidden ${className}`}>
-      {/* Action buttons revealed behind */}
+      {/* Action buttons revealed behind — modern pill style */}
       <motion.div
-        className="absolute inset-y-0 right-0 flex items-stretch"
-        style={{ opacity: actionsOpacity, width: totalWidth }}
+        className="absolute inset-y-0 right-0 flex items-center justify-evenly px-2"
+        style={{ width: totalWidth, scale: actionsScale }}
       >
         {actions.map((action, i) => (
           <button
@@ -79,11 +96,12 @@ export default function SwipeableRow({
               e.stopPropagation();
               handleActionClick(action);
             }}
-            className={`flex flex-col items-center justify-center gap-1 transition-colors ${action.color} ${action.textColor} active:brightness-90`}
-            style={{ width: actionWidth }}
+            className="flex flex-col items-center justify-center gap-1 active:scale-90 transition-transform"
           >
-            <span className="material-symbols-outlined text-[22px]">{action.icon}</span>
-            <span className="text-[10px] font-semibold leading-none">{action.label}</span>
+            <div className={`size-10 rounded-full flex items-center justify-center ${action.color} shadow-md`}>
+              <span className={`material-symbols-outlined text-[20px] ${action.textColor}`}>{action.icon}</span>
+            </div>
+            <span className="text-[10px] font-medium text-slate-500 leading-none">{action.label}</span>
           </button>
         ))}
       </motion.div>
@@ -95,14 +113,9 @@ export default function SwipeableRow({
         dragDirectionLock
         dragConstraints={{ left: -totalWidth - 20, right: 0 }}
         dragElastic={{ left: 0.05, right: 0.2 }}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        onTap={() => {
-          if (isOpen) {
-            close();
-          } else {
-            onTap?.();
-          }
-        }}
+        onTap={handleTap}
         className="relative z-10 bg-white touch-pan-y"
       >
         {children}
