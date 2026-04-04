@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
     function handleVisibility() {
-      if (document.visibilityState === "visible") fetchProfile(user.id);
+      if (document.visibilityState === "visible" && user) fetchProfile(user.id);
     }
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
