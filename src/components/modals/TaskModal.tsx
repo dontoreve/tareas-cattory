@@ -71,7 +71,6 @@ export default function TaskModal({
   const [projectError, setProjectError] = useState(false);
   const [dateError, setDateError] = useState(false);
 
-  const titleRef = useRef<HTMLInputElement>(null);
   const linkUrlRef = useRef<HTMLInputElement>(null);
   const teamSectionRef = useRef<HTMLDivElement>(null);
   const projectRowRef = useRef<HTMLDivElement>(null);
@@ -106,13 +105,9 @@ export default function TaskModal({
   useEffect(() => {
     if (open) {
       document.documentElement.style.overflow = "hidden";
-      // Only focus title on new task (not edit) to avoid mobile keyboard opening
-      if (!task) {
-        setTimeout(() => titleRef.current?.focus(), 100);
-      }
       return () => { document.documentElement.style.overflow = ""; };
     }
-  }, [open, task]);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -347,11 +342,11 @@ export default function TaskModal({
               {/* Title — large like Reminders */}
               <div className="px-4 pt-4 pb-1">
                 <input
-                  ref={titleRef}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Nombre de la tarea"
                   required
+                  autoFocus={!isEdit}
                   autoComplete="off"
                   enterKeyHint="done"
                   className="w-full text-[22px] font-bold bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none placeholder:text-slate-300 text-slate-900 caret-primary"
