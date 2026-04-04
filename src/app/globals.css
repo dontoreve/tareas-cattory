@@ -89,6 +89,12 @@ html, body {
   border-radius: 4px;
 }
 
+/* Remove focus outline from inline inputs inside modals/cards */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
 /* ── Task card transitions ───────────────────────────────────── */
 .task-card {
   transition: opacity 200ms ease, transform 200ms ease;

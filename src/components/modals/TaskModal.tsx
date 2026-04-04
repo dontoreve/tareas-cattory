@@ -246,7 +246,7 @@ export default function TaskModal({
               key={m.id}
               type="button"
               title={name + (isPrimary ? " (Principal)" : isSecondary ? " (Apoyo)" : "")}
-              className={`size-9 rounded-full flex items-center justify-center text-[12px] font-bold cursor-pointer transition-all duration-200 active:scale-90 shadow-sm ${color.bg} ${color.text} ${ringClass} ${!isSelected ? "opacity-50 hover:opacity-100" : ""}`}
+              className={`${isSecondary ? "size-7 text-[10px]" : "size-9 text-[12px]"} rounded-full flex items-center justify-center font-bold cursor-pointer transition-all duration-200 active:scale-90 shadow-sm ${color.bg} ${color.text} ${ringClass} ${!isSelected ? "opacity-50 hover:opacity-100" : ""}`}
               onClick={() => {
                 setTeamError(false);
                 if (m.id === responsibleId) {
@@ -264,7 +264,7 @@ export default function TaskModal({
               }}
             >
               {m.avatar_url ? (
-                <img src={m.avatar_url} className="size-9 rounded-full object-cover" alt="" />
+                <img src={m.avatar_url} className={`${isSecondary ? "size-7" : "size-9"} rounded-full object-cover`} alt="" />
               ) : initials}
             </button>
           );
@@ -525,110 +525,184 @@ export default function TaskModal({
         </form>
       </div>
 
-      {/* ─── DESKTOP (sm+) ─────────────────────────────────────── */}
-      <div className="relative hidden sm:flex w-full max-w-lg mx-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-white/20 dark:border-slate-700/40 max-h-[85vh] flex-col overflow-hidden">
+      {/* ─── DESKTOP (sm+) — Card-based minimalist design ─────── */}
+      <div className="relative hidden sm:flex w-full max-w-lg mx-4 bg-slate-100 dark:bg-slate-950 rounded-2xl shadow-2xl max-h-[85vh] flex-col overflow-hidden">
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-800">
-            <h2 className="text-base font-bold">{isEdit ? "Editar Tarea" : "Nueva Tarea"}</h2>
-            <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-              <span className="material-symbols-outlined">close</span>
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-3">
+            <button type="button" onClick={onClose} className="size-8 flex items-center justify-center rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
+              <span className="material-symbols-outlined text-[18px] text-slate-500 dark:text-slate-400">close</span>
+            </button>
+            <h2 className="text-[15px] font-bold text-slate-900 dark:text-slate-100">{isEdit ? "Editar Tarea" : "Nueva Tarea"}</h2>
+            <button
+              type="submit"
+              disabled={saving || !title.trim()}
+              className="size-8 flex items-center justify-center rounded-full bg-primary hover:bg-primary/80 transition-colors disabled:opacity-30"
+            >
+              <span className="material-symbols-outlined text-[18px] text-white">check</span>
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 custom-scroll">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nombre de la tarea"
-              required
-              autoComplete="off"
-              className="w-full text-lg font-semibold bg-transparent border-none outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600"
-            />
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Notas..."
-              rows={2}
-              className="w-full bg-transparent border-none outline-none text-sm text-slate-600 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none custom-scroll max-h-[120px] overflow-y-auto"
-            />
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto custom-scroll px-4 pb-4 space-y-3">
 
-            {hasUnmigratedUrls && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg">
-                <span className="material-symbols-outlined text-primary text-[18px]">link</span>
-                <span className="text-xs text-primary flex-1">URL detectada en la descripción</span>
-                <button type="button" onClick={migrateUrls} className="text-xs font-bold text-primary hover:underline">Mover a Links</button>
+            {/* ── Card 1: Title + Description + Links ──────────── */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-4 pt-4 pb-1">
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Nombre de la tarea"
+                  required
+                  autoFocus
+                  autoComplete="off"
+                  className="w-full text-[20px] font-bold bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600 text-slate-900 dark:text-slate-100 caret-primary"
+                />
               </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <div ref={teamSectionRef} className={`col-span-2 transition-all duration-300 ${teamError ? "ring-2 ring-red-400 rounded-xl p-2 animate-[shake_0.4s_ease-in-out]" : ""}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Equipo</label>
-                  {teamError && <span className="text-[11px] text-red-500 font-medium">— Elige un responsable</span>}
+              <div className="px-4 pb-3">
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Notas..."
+                  rows={2}
+                  className="w-full bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none text-[14px] text-slate-500 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none caret-primary max-h-[120px] overflow-y-auto custom-scroll"
+                />
+              </div>
+              {hasUnmigratedUrls && (
+                <div className="mx-4 mb-3 flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-xl">
+                  <span className="material-symbols-outlined text-primary text-[16px]">link</span>
+                  <span className="text-xs text-primary flex-1">URL detectada</span>
+                  <button type="button" onClick={migrateUrls} className="text-xs font-bold text-primary hover:underline">Mover a Links</button>
                 </div>
-                {teamPicker}
-              </div>
-              <div ref={projectRowRef} className={`transition-all duration-300 ${projectError ? "ring-2 ring-red-400 rounded-xl p-2 animate-[shake_0.4s_ease-in-out]" : ""}`}>
-                <label className={`text-xs font-semibold uppercase tracking-wider mb-1.5 block ${projectError ? "text-red-500" : "text-slate-400"}`}>
-                  {projectError ? "Proyecto — Elige un proyecto" : "Proyecto"}
-                </label>
-                <CustomSelect value={projectId} onChange={(v) => { setProjectId(v); setProjectError(false); }} options={projectOptions} placeholder="Elegir proyecto..." />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Estado</label>
-                <CustomSelect value={status} onChange={setStatus} options={STATUS_OPTIONS} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Prioridad</label>
-                <CustomSelect value={priority} onChange={setPriority} options={PRIORITY_OPTIONS} />
-              </div>
-              <div>
-                <label className={`text-xs font-semibold uppercase tracking-wider mb-1.5 block ${dateError ? "text-red-500" : "text-slate-400"}`}>
-                  {dateError ? "Fecha limite — Elige una fecha" : "Fecha limite"}
-                </label>
-                <div ref={dateRowRef} className={`relative transition-all duration-300 ${dateError ? "ring-2 ring-red-400 rounded-xl animate-[shake_0.4s_ease-in-out]" : ""}`}>
-                  <button
-                    type="button"
-                    className={`hidden sm:flex w-full items-center justify-between px-4 py-2.5 rounded-xl border bg-white dark:bg-slate-800 text-sm cursor-pointer hover:bg-slate-50 transition-colors ${dateError ? "border-red-300" : "border-slate-200 dark:border-slate-700"}`}
-                  >
-                    <span className={deadline ? "text-slate-700" : "text-slate-400"}>{deadline ? new Date(deadline + "T00:00:00").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Sin fecha"}</span>
-                  </button>
+              )}
+              {/* Link inputs */}
+              <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[18px]">link</span>
                   <input
-                    type="date"
-                    value={deadline}
-                    onChange={(e) => { setDeadline(e.target.value); setDateError(false); }}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    value={linkLabel}
+                    onChange={(e) => setLinkLabel(e.target.value)}
+                    placeholder="Nombre del enlace"
+                    className="flex-1 bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none text-[14px] text-slate-700 dark:text-slate-300 placeholder:text-slate-300 dark:placeholder:text-slate-600 caret-primary"
+                  />
+                </div>
+              </div>
+              <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[18px]">public</span>
+                  <input
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    onBlur={autoSaveLink}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLink(); } }}
+                    placeholder="https://..."
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    className="flex-1 bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none text-[14px] text-primary placeholder:text-slate-300 dark:placeholder:text-slate-600 caret-primary"
                   />
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Links</label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input value={linkLabel} onChange={(e) => setLinkLabel(e.target.value)} placeholder="Nombre" className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm" />
-                <div className="flex gap-2">
-                  <input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://..." autoCapitalize="none" autoCorrect="off" spellCheck={false} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLink(); } }} className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm" />
-                  <button type="button" onClick={addLink} className="shrink-0 size-10 flex items-center justify-center text-primary hover:bg-primary/10 rounded-xl transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">add</span>
-                  </button>
+            {/* Saved links */}
+            {links.length > 0 && linksDisplay}
+
+            {/* ── Card 2: Team ────────────────────────────────── */}
+            <div
+              ref={teamSectionRef}
+              className={`bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm transition-all duration-300 ${teamError ? "ring-2 ring-red-400 animate-[shake_0.4s_ease-in-out]" : ""}`}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-slate-400 text-[18px]">group</span>
+                <span className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide">Equipo</span>
+                {teamError && (
+                  <span className="text-[12px] text-red-500 font-medium ml-auto">Elige un responsable</span>
+                )}
+              </div>
+              {teamPicker}
+            </div>
+
+            {/* ── Card 3: Details — 2-column grid ────────────── */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm">
+              <div className="grid grid-cols-2">
+                {/* Project — full width */}
+                <div
+                  ref={projectRowRef}
+                  className={`col-span-2 transition-all duration-300 ${projectError ? "ring-2 ring-red-400 rounded-t-2xl animate-[shake_0.4s_ease-in-out]" : ""}`}
+                >
+                  <div className="flex items-center gap-3 px-4 py-3.5">
+                    <span className={`material-symbols-outlined text-[18px] ${projectError ? "text-red-400" : "text-slate-400"}`}>folder</span>
+                    <span className={`text-[14px] shrink-0 ${projectError ? "text-red-500 font-medium" : "text-slate-500"}`}>
+                      {projectError ? "Elige un proyecto" : "Proyecto"}
+                    </span>
+                    <div className="flex-1 flex justify-end">
+                      <CustomSelect value={projectId} onChange={(v) => { setProjectId(v); setProjectError(false); }} options={projectOptions} placeholder="Elegir..." />
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-2 h-px bg-slate-100 dark:bg-slate-800 ml-12" />
+
+                {/* Status */}
+                <div className="border-r border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-3 px-4 py-3.5">
+                    <span className="material-symbols-outlined text-slate-400 text-[18px]">radio_button_checked</span>
+                    <span className="text-[14px] text-slate-500 shrink-0">Estado</span>
+                    <div className="flex-1 flex justify-end">
+                      <CustomSelect value={status} onChange={setStatus} options={STATUS_OPTIONS} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <div className="flex items-center gap-3 px-4 py-3.5">
+                    <span className="material-symbols-outlined text-slate-400 text-[18px]">flag</span>
+                    <span className="text-[14px] text-slate-500 shrink-0">Prioridad</span>
+                    <div className="flex-1 flex justify-end">
+                      <CustomSelect value={priority} onChange={setPriority} options={PRIORITY_OPTIONS} />
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-2 h-px bg-slate-100 dark:bg-slate-800 ml-12" />
+
+                {/* Deadline */}
+                <div
+                  ref={dateRowRef}
+                  className={`col-span-2 transition-all duration-300 ${dateError ? "ring-2 ring-red-400 rounded-b-2xl animate-[shake_0.4s_ease-in-out]" : ""}`}
+                >
+                  <div className="flex items-center gap-3 px-4 py-3.5">
+                    <span className={`material-symbols-outlined text-[18px] ${dateError ? "text-red-400" : "text-slate-400"}`}>calendar_today</span>
+                    <span className={`text-[14px] flex-1 ${dateError ? "text-red-500 font-medium" : "text-slate-500"}`}>
+                      {dateError ? "Elige una fecha" : "Fecha"}
+                    </span>
+                    <div className="relative">
+                      <span className={`text-[14px] font-medium ${deadline ? "text-primary" : "text-slate-400"}`}>
+                        {deadline ? new Date(deadline + "T00:00:00").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Sin fecha"}
+                      </span>
+                      <input
+                        type="date"
+                        value={deadline}
+                        onChange={(e) => { setDeadline(e.target.value); setDateError(false); }}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-              {linksDisplay}
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 px-5 py-3 border-t border-slate-100 dark:border-slate-800">
+            {/* ── Delete (edit mode) ──────────────────────────── */}
             {isEdit && onDelete && (
-              <button type="button" onClick={handleDelete} disabled={deleting} className="px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors font-medium disabled:opacity-50">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="w-full py-3 text-[14px] text-red-500 font-medium bg-white dark:bg-slate-900 rounded-2xl shadow-sm hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:opacity-50"
+              >
                 {deleting ? "Eliminando..." : "Eliminar tarea"}
               </button>
             )}
-            <div className="flex-1" />
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium">Cancelar</button>
-            <button type="submit" disabled={saving || !title.trim()} className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50">
-              {saving ? "Guardando..." : isEdit ? "Guardar Cambios" : "Crear Tarea"}
-            </button>
           </div>
         </form>
       </div>
