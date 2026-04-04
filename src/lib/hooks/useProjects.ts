@@ -61,6 +61,19 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
     };
   }, [userId, fetchProjects, fetchMemberAccess]);
 
+  // Refetch on app focus (safety net for PWA / mobile tab switch)
+  useEffect(() => {
+    if (!userId) return;
+    function handleVisibility() {
+      if (document.visibilityState === "visible") {
+        fetchProjects();
+        fetchMemberAccess();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [userId, fetchProjects, fetchMemberAccess]);
+
   /** Get projects visible to a specific member */
   const getProjectsForMember = useCallback(
     (memberId: string) => {

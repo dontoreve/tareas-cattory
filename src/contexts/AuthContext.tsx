@@ -100,6 +100,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
+  // Refetch profile on app focus (PWA resume)
+  useEffect(() => {
+    if (!user) return;
+    function handleVisibility() {
+      if (document.visibilityState === "visible") fetchProfile(user.id);
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [user, fetchProfile]);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
