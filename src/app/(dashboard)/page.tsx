@@ -672,7 +672,7 @@ function PriorityCard({
             <span className="font-semibold text-sm leading-tight line-clamp-2">{task.title}</span>
           </div>
           {/* Chips row */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5">
             {task.projects?.name && color ? (
               <span className={`px-1.5 py-0.5 rounded text-[11px] font-bold leading-none ${color.bg} ${color.text} max-w-[120px] truncate`}>
                 {task.projects.name}
@@ -682,14 +682,15 @@ function PriorityCard({
               <span className={`w-1.5 h-1.5 rounded-full ${pc.dot}`} />
               {pc.label}
             </span>
-            {task.deadline && (
-              <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded leading-none ${
-                overdue ? "text-red-600 bg-red-50" : "text-slate-500 bg-slate-100"
-              }`}>
-                {formatDate(task.deadline)}
-              </span>
-            )}
           </div>
+          {/* Date — always on its own line */}
+          {task.deadline && (
+            <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded leading-none inline-block ${
+              overdue ? "text-red-600 bg-red-50" : "text-slate-400"
+            }`}>
+              {formatDate(task.deadline)}
+            </span>
+          )}
         </div>
 
         {/* Right: Swipe hint chevron */}

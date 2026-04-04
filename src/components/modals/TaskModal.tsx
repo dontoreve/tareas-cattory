@@ -323,6 +323,8 @@ export default function TaskModal({
                   placeholder="Nombre de la tarea"
                   required
                   autoFocus
+                  autoComplete="off"
+                  autoCorrect="off"
                   className="w-full text-[22px] font-bold bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none placeholder:text-slate-300 text-slate-900 caret-primary"
                 />
               </div>
@@ -501,6 +503,7 @@ export default function TaskModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Nombre de la tarea"
               required
+              autoComplete="off"
               className="w-full text-lg font-semibold bg-transparent border-none outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600"
             />
             <textarea
