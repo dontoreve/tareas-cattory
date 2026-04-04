@@ -7,7 +7,6 @@ import {
   Draggable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { motion, AnimatePresence } from "framer-motion";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
@@ -31,12 +30,6 @@ const COUNT_CLASSES: Record<Status, string> = {
   "to-do": "bg-slate-200 dark:bg-slate-800 text-slate-500",
   "in-progress": "bg-primary/20 text-primary",
   done: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400",
-};
-
-const TAB_UNDERLINE: Record<Status, string> = {
-  "to-do": "bg-slate-400",
-  "in-progress": "bg-primary",
-  done: "bg-emerald-500",
 };
 
 // ── Desktop Drag & Drop Card ─────────────────────────────────────
@@ -302,16 +295,6 @@ export default function KanbanPage() {
     }
   }
 
-  // Tab swipe direction tracking
-  const tabIndex = COLUMNS.findIndex((c) => c.id === activeTab);
-
-  function handleTabSwipe(direction: number) {
-    const newIndex = tabIndex + direction;
-    if (newIndex >= 0 && newIndex < COLUMNS.length) {
-      setActiveTab(COLUMNS[newIndex].id);
-    }
-  }
-
   if (tasksLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -322,22 +305,45 @@ export default function KanbanPage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Admin member filter */}
-      {role === "admin" && (
-        <div className="flex items-center gap-3">
-          <select
-            value={viewingMemberId ?? ""}
-            onChange={(e) => setViewingMemberId(e.target.value || null)}
-            className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 cursor-pointer"
-          >
-            <option value="">Mis Tareas</option>
-            {teamMembers
-              .filter((m) => m.id !== user?.id)
-              .map((m) => (
-                <option key={m.id} value={m.id}>{m.full_name ?? "Sin nombre"}</option>
-              ))}
-          </select>
-        </div>
+      {/* Admin member filter — desktop: dropdown, mobile: avatar chips */}
+      {role === "admin" && teamMembers.length > 0 && (
+        <>
+          {/* Desktop dropdown */}
+          <div className="hidden md:flex items-center gap-3">
+            <select
+              value={viewingMemberId ?? ""}
+              onChange={(e) => setViewingMemberId(e.target.value || null)}
+              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            >
+              <option value="">Mis Tareas</option>
+              {teamMembers
+                .filter((m) => m.id !== user?.id)
+                .map((m) => (
+                  <option key={m.id} value={m.id}>{m.full_name ?? "Sin nombre"}</option>
+                ))}
+            </select>
+          </div>
+          {/* Mobile avatar chips */}
+          <div className="flex md:hidden items-center gap-2 flex-wrap">
+            {teamMembers.map((m) => {
+              const isActive = effectiveUserId === m.id;
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => setViewingMemberId(m.id === user?.id ? null : m.id)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                    isActive
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                      : "bg-slate-100 text-slate-500 active:bg-slate-200"
+                  }`}
+                >
+                  <img src={m.avatar_url || "/logo.png"} className="size-5 rounded-full object-cover" alt="" />
+                  {m.full_name?.split(" ")[0] ?? "?"}
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Progress bar */}
@@ -355,87 +361,56 @@ export default function KanbanPage() {
       </div>
 
       {/* ═══ MOBILE KANBAN ═══════════════════════════════════════ */}
-      <div className="md:hidden">
-        {/* Tab bar */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="flex border-b border-slate-100">
-            {COLUMNS.map((col) => {
-              const isActive = activeTab === col.id;
-              return (
-                <button
-                  key={col.id}
-                  onClick={() => setActiveTab(col.id)}
-                  className={`flex-1 relative py-3 flex items-center justify-center gap-1.5 text-[13px] font-semibold transition-colors ${
-                    isActive ? "text-slate-900" : "text-slate-400"
-                  }`}
-                >
-                  <span className={`size-2 rounded-full ${col.dotClass} ${isActive ? "" : "opacity-40"}`} />
-                  {col.label}
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-0.5 ${
-                    isActive ? COUNT_CLASSES[col.id] : "bg-slate-100 text-slate-400"
-                  }`}>
-                    {columns[col.id].length}
-                  </span>
-                  {/* Active underline */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="kanban-tab-underline"
-                      className={`absolute bottom-0 left-2 right-2 h-[3px] rounded-full ${TAB_UNDERLINE[col.id]}`}
-                      transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Tab content — swipeable */}
-          <div className="overflow-hidden" style={{ touchAction: "pan-y" }}>
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.div
-                key={activeTab}
-                initial={{ x: 100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -100, opacity: 0 }}
-                transition={{ type: "spring", bounce: 0.1, duration: 0.35 }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.15}
-                onDragEnd={(_, info) => {
-                  if (info.offset.x < -60 || info.velocity.x < -300) handleTabSwipe(1);
-                  else if (info.offset.x > 60 || info.velocity.x > 300) handleTabSwipe(-1);
-                }}
+      <div className="md:hidden space-y-3">
+        {/* Status filter chips */}
+        <div className="flex items-center gap-2">
+          {COLUMNS.map((col) => {
+            const isActive = activeTab === col.id;
+            const count = columns[col.id].length;
+            return (
+              <button
+                key={col.id}
+                onClick={() => setActiveTab(col.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  isActive
+                    ? `${COUNT_CLASSES[col.id]} ring-1 ring-current/20 shadow-sm`
+                    : "bg-slate-100 text-slate-400 active:bg-slate-200"
+                }`}
               >
-                {columns[activeTab].length === 0 ? (
-                  <div className="py-16 text-center text-slate-400">
-                    <span className="material-symbols-outlined text-4xl mb-2 block">
-                      {activeTab === "done" ? "task_alt" : "inbox"}
-                    </span>
-                    <p className="text-sm">
-                      {activeTab === "to-do" && "No hay tareas por hacer"}
-                      {activeTab === "in-progress" && "Nada en progreso"}
-                      {activeTab === "done" && "Sin tareas completadas"}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    {columns[activeTab].map((task) => (
-                      <MobileKanbanCard
-                        key={task.id}
-                        task={task}
-                        onPreview={openPreview}
-                        onStatusChange={handleStatusChange}
-                      />
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+                <span className={`size-2 rounded-full ${col.dotClass} ${isActive ? "" : "opacity-40"}`} />
+                {col.label}
+                <span className={`text-[10px] font-bold ${isActive ? "" : "text-slate-300"}`}>{count}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Swipe hint */}
-        <p className="text-center text-[11px] text-slate-300 mt-2">
+        {/* Card list */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          {columns[activeTab].length === 0 ? (
+            <div className="py-16 text-center text-slate-400">
+              <span className="material-symbols-outlined text-4xl mb-2 block">
+                {activeTab === "done" ? "task_alt" : "inbox"}
+              </span>
+              <p className="text-sm">
+                {activeTab === "to-do" && "No hay tareas por hacer"}
+                {activeTab === "in-progress" && "Nada en progreso"}
+                {activeTab === "done" && "Sin tareas completadas"}
+              </p>
+            </div>
+          ) : (
+            columns[activeTab].map((task) => (
+              <MobileKanbanCard
+                key={task.id}
+                task={task}
+                onPreview={openPreview}
+                onStatusChange={handleStatusChange}
+              />
+            ))
+          )}
+        </div>
+
+        <p className="text-center text-[11px] text-slate-300">
           Desliza las tarjetas para cambiar estado
         </p>
       </div>
