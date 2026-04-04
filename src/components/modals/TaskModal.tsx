@@ -68,9 +68,11 @@ export default function TaskModal({
   const [linkUrl, setLinkUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [teamError, setTeamError] = useState(false);
+  const [dateError, setDateError] = useState(false);
 
   const linkUrlRef = useRef<HTMLInputElement>(null);
   const teamSectionRef = useRef<HTMLDivElement>(null);
+  const dateRowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (task) {
@@ -169,6 +171,13 @@ export default function TaskModal({
       setTimeout(() => setTeamError(false), 2000);
       return;
     }
+    // Validate deadline
+    if (!deadline) {
+      setDateError(true);
+      dateRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => setDateError(false), 2000);
+      return;
+    }
     // Auto-save any pending link
     const finalLinks = linkUrl.trim()
       ? [...links, { label: linkLabel.trim() || linkUrl.trim(), url: linkUrl.trim() }]
@@ -230,6 +239,7 @@ export default function TaskModal({
               title={name + (isPrimary ? " (Principal)" : isSecondary ? " (Apoyo)" : "")}
               className={`size-9 rounded-full flex items-center justify-center text-[12px] font-bold cursor-pointer transition-all duration-200 active:scale-90 shadow-sm ${color.bg} ${color.text} ${ringClass} ${!isSelected ? "opacity-50 hover:opacity-100" : ""}`}
               onClick={() => {
+                setTeamError(false);
                 if (m.id === responsibleId) {
                   setResponsibleId(secondaryId || "");
                   setSecondaryId("");
@@ -463,16 +473,23 @@ export default function TaskModal({
               <div className="h-px bg-slate-100 ml-12" />
 
               {/* Deadline — native date input */}
-              <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
-                <span className="material-symbols-outlined text-slate-400 text-[18px]">calendar_today</span>
-                <span className="text-[15px] text-slate-700 flex-1">Fecha</span>
-                <input
-                  type="date"
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                  className="bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] text-primary font-medium text-right appearance-none"
-                />
-              </label>
+              <div
+                ref={dateRowRef}
+                className={`transition-all duration-300 ${dateError ? "ring-2 ring-red-400 rounded-b-2xl animate-[shake_0.4s_ease-in-out]" : ""}`}
+              >
+                <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
+                  <span className={`material-symbols-outlined text-[18px] ${dateError ? "text-red-400" : "text-slate-400"}`}>calendar_today</span>
+                  <span className={`text-[15px] flex-1 ${dateError ? "text-red-500" : "text-slate-700"}`}>
+                    {dateError ? "Elige una fecha" : "Fecha"}
+                  </span>
+                  <input
+                    type="date"
+                    value={deadline}
+                    onChange={(e) => { setDeadline(e.target.value); setDateError(false); }}
+                    className="bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] text-primary font-medium text-right appearance-none"
+                  />
+                </label>
+              </div>
             </div>
 
             {/* ── Delete (edit mode) ──────────────────────────────── */}
@@ -548,18 +565,20 @@ export default function TaskModal({
                 <CustomSelect value={priority} onChange={setPriority} options={PRIORITY_OPTIONS} />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Fecha limite</label>
-                <div className="relative">
+                <label className={`text-xs font-semibold uppercase tracking-wider mb-1.5 block ${dateError ? "text-red-500" : "text-slate-400"}`}>
+                  {dateError ? "Fecha limite — Elige una fecha" : "Fecha limite"}
+                </label>
+                <div ref={dateRowRef} className={`relative transition-all duration-300 ${dateError ? "ring-2 ring-red-400 rounded-xl animate-[shake_0.4s_ease-in-out]" : ""}`}>
                   <button
                     type="button"
-                    className="hidden sm:flex w-full items-center justify-between px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm cursor-pointer hover:bg-slate-50 transition-colors"
+                    className={`hidden sm:flex w-full items-center justify-between px-4 py-2.5 rounded-xl border bg-white dark:bg-slate-800 text-sm cursor-pointer hover:bg-slate-50 transition-colors ${dateError ? "border-red-300" : "border-slate-200 dark:border-slate-700"}`}
                   >
                     <span className={deadline ? "text-slate-700" : "text-slate-400"}>{deadline ? new Date(deadline + "T00:00:00").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Sin fecha"}</span>
                   </button>
                   <input
                     type="date"
                     value={deadline}
-                    onChange={(e) => setDeadline(e.target.value)}
+                    onChange={(e) => { setDeadline(e.target.value); setDateError(false); }}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                 </div>
