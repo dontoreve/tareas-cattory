@@ -40,6 +40,12 @@ html, body {
   input, textarea, select {
     font-size: max(16px, 1em) !important;
   }
+  /* Remove blue focus ring on mobile — cleaner Apple-like look */
+  input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none;
+  }
 }
 
 /* ── Modal transitions ───────────────────────────────────────── */

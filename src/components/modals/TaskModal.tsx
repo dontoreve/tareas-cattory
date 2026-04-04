@@ -273,35 +273,39 @@ export default function TaskModal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* ─── MOBILE — Apple Reminders inspired ──────────────────── */}
-      <div className="relative w-full sm:hidden bg-slate-50 rounded-t-[20px] shadow-2xl flex flex-col" style={{ maxHeight: "calc(100dvh - env(safe-area-inset-top) - 1rem)" }}>
+      <div className="relative w-full sm:hidden bg-slate-100 rounded-t-[20px] shadow-2xl flex flex-col" style={{ height: "calc(100dvh - env(safe-area-inset-top) - 0.5rem)" }}>
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          {/* Drag handle + header */}
-          <div className="shrink-0">
-            <div className="flex justify-center pt-2 pb-1">
-              <div className="w-9 h-1 rounded-full bg-slate-300" />
-            </div>
-            <div className="flex items-center justify-between px-4 pb-2">
-              <button type="button" onClick={onClose} className="text-[15px] text-primary font-medium w-[72px] text-left">
-                Cancelar
-              </button>
-              <h2 className="text-[15px] font-bold text-slate-800">
-                {isEdit ? "Editar Tarea" : "Nueva Tarea"}
-              </h2>
-              <button
-                type="submit"
-                disabled={saving || !title.trim()}
-                className="text-[15px] text-primary font-bold w-[72px] text-right disabled:opacity-30"
-              >
-                {saving ? "..." : isEdit ? "Listo" : "Crear"}
-              </button>
-            </div>
+          {/* Drag handle */}
+          <div className="flex justify-center pt-2 pb-0.5 shrink-0">
+            <div className="w-9 h-[5px] rounded-full bg-slate-300" />
+          </div>
+
+          {/* Header — iOS style with pill buttons */}
+          <div className="flex items-center justify-between px-4 py-2 shrink-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="size-8 flex items-center justify-center rounded-full bg-slate-200/80 active:bg-slate-300 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] text-slate-500">close</span>
+            </button>
+            <h2 className="text-[17px] font-bold text-slate-900">
+              {isEdit ? "Editar Tarea" : "Nueva Tarea"}
+            </h2>
+            <button
+              type="submit"
+              disabled={saving || !title.trim()}
+              className="size-8 flex items-center justify-center rounded-full bg-primary active:bg-primary/80 transition-colors disabled:opacity-30"
+            >
+              <span className="material-symbols-outlined text-[18px] text-white">check</span>
+            </button>
           </div>
 
           {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto custom-scroll px-4 pb-8" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
+          <div className="flex-1 overflow-y-auto custom-scroll px-4" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
 
             {/* ── Card 1: Title + Description + URL ──────────────── */}
-            <div className="bg-white rounded-2xl overflow-hidden mb-3">
+            <div className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
               {/* Title — large like Reminders */}
               <div className="px-4 pt-4 pb-1">
                 <input
@@ -310,7 +314,7 @@ export default function TaskModal({
                   placeholder="Nombre de la tarea"
                   required
                   autoFocus
-                  className="w-full text-xl font-bold bg-transparent border-none outline-none placeholder:text-slate-300 text-slate-900"
+                  className="w-full text-[22px] font-bold bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none placeholder:text-slate-300 text-slate-900 caret-primary"
                 />
               </div>
               {/* Description */}
@@ -320,7 +324,7 @@ export default function TaskModal({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Notas..."
                   rows={2}
-                  className="w-full bg-transparent border-none outline-none text-[15px] text-slate-500 placeholder:text-slate-300 resize-none"
+                  className="w-full bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none text-[15px] text-slate-500 placeholder:text-slate-300 resize-none caret-primary"
                 />
               </div>
               {/* URL migration banner */}
@@ -328,26 +332,24 @@ export default function TaskModal({
                 <div className="mx-4 mb-3 flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-xl">
                   <span className="material-symbols-outlined text-primary text-[16px]">link</span>
                   <span className="text-xs text-primary flex-1">URL detectada</span>
-                  <button type="button" onClick={migrateUrls} className="text-xs font-bold text-primary">
-                    Mover a Links
-                  </button>
+                  <button type="button" onClick={migrateUrls} className="text-xs font-bold text-primary">Mover a Links</button>
                 </div>
               )}
-              {/* Divider + URL input inline */}
+              {/* URL fields */}
               <div className="border-t border-slate-100 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-slate-400 text-[18px]">link</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-slate-300 text-[18px]">link</span>
                   <input
                     value={linkLabel}
                     onChange={(e) => setLinkLabel(e.target.value)}
                     placeholder="Nombre del enlace"
-                    className="flex-1 bg-transparent border-none outline-none text-[15px] text-slate-700 placeholder:text-slate-300"
+                    className="flex-1 bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none text-[15px] text-slate-700 placeholder:text-slate-300 caret-primary"
                   />
                 </div>
               </div>
               <div className="border-t border-slate-100 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-slate-400 text-[18px]">public</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-slate-300 text-[18px]">public</span>
                   <input
                     ref={linkUrlRef}
                     value={linkUrl}
@@ -356,7 +358,7 @@ export default function TaskModal({
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLink(); } }}
                     placeholder="https://..."
                     inputMode="url"
-                    className="flex-1 bg-transparent border-none outline-none text-[15px] text-primary placeholder:text-slate-300"
+                    className="flex-1 bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none text-[15px] text-primary placeholder:text-slate-300 caret-primary"
                   />
                 </div>
               </div>
@@ -368,7 +370,7 @@ export default function TaskModal({
             )}
 
             {/* ── Card 2: Team ────────────────────────────────────── */}
-            <div className="bg-white rounded-2xl p-4 mb-3">
+            <div className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-slate-400 text-[18px]">group</span>
                 <span className="text-[13px] font-semibold text-slate-500 uppercase tracking-wide">Equipo</span>
@@ -376,46 +378,76 @@ export default function TaskModal({
               {teamPicker}
             </div>
 
-            {/* ── Card 3: Details (iOS Settings style rows) ────── */}
-            <div className="bg-white rounded-2xl overflow-hidden mb-3">
+            {/* ── Card 3: Details — native <select> for iOS picker wheel ── */}
+            <div className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
               {/* Project */}
-              <div className="flex items-center gap-3 px-4 py-3.5">
+              <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
                 <span className="material-symbols-outlined text-slate-400 text-[18px]">folder</span>
                 <span className="text-[15px] text-slate-700 flex-1">Proyecto</span>
-                <div className="max-w-[180px]">
-                  <CustomSelect value={projectId} onChange={setProjectId} options={projectOptions} placeholder="Ninguno" variant="chip" />
-                </div>
-              </div>
+                <select
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
+                  className="bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] text-primary font-medium text-right appearance-none pr-0 max-w-[50%]"
+                >
+                  {projectOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined text-slate-300 text-[16px] -ml-1">chevron_right</span>
+              </label>
               <div className="h-px bg-slate-100 ml-12" />
+
               {/* Status */}
-              <div className="flex items-center gap-3 px-4 py-3.5">
+              <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
                 <span className="material-symbols-outlined text-slate-400 text-[18px]">radio_button_checked</span>
                 <span className="text-[15px] text-slate-700 flex-1">Estado</span>
-                <div className="max-w-[180px]">
-                  <CustomSelect value={status} onChange={setStatus} options={STATUS_OPTIONS} variant="chip" />
-                </div>
-              </div>
+                {selectedStatus?.dotClass && (
+                  <span className={`size-2 rounded-full ${selectedStatus.dotClass}`} />
+                )}
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] text-primary font-medium text-right appearance-none pr-0"
+                >
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined text-slate-300 text-[16px] -ml-1">chevron_right</span>
+              </label>
               <div className="h-px bg-slate-100 ml-12" />
+
               {/* Priority */}
-              <div className="flex items-center gap-3 px-4 py-3.5">
+              <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
                 <span className="material-symbols-outlined text-slate-400 text-[18px]">flag</span>
                 <span className="text-[15px] text-slate-700 flex-1">Prioridad</span>
-                <div className="max-w-[180px]">
-                  <CustomSelect value={priority} onChange={setPriority} options={PRIORITY_OPTIONS} variant="chip" />
-                </div>
-              </div>
+                {selectedPriority?.dotClass && (
+                  <span className={`size-2 rounded-full ${selectedPriority.dotClass}`} />
+                )}
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] text-primary font-medium text-right appearance-none pr-0"
+                >
+                  {PRIORITY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined text-slate-300 text-[16px] -ml-1">chevron_right</span>
+              </label>
               <div className="h-px bg-slate-100 ml-12" />
-              {/* Deadline — native date input for mobile */}
-              <div className="flex items-center gap-3 px-4 py-3.5">
+
+              {/* Deadline — native date input */}
+              <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
                 <span className="material-symbols-outlined text-slate-400 text-[18px]">calendar_today</span>
                 <span className="text-[15px] text-slate-700 flex-1">Fecha</span>
                 <input
                   type="date"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
-                  className="bg-transparent border-none outline-none text-[15px] text-primary font-medium text-right"
+                  className="bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] text-primary font-medium text-right appearance-none"
                 />
-              </div>
+              </label>
             </div>
 
             {/* ── Delete (edit mode) ──────────────────────────────── */}
@@ -425,7 +457,7 @@ export default function TaskModal({
                   type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="w-full py-3.5 text-[15px] text-red-500 font-medium bg-white rounded-2xl active:bg-red-50 transition-colors disabled:opacity-50"
+                  className="w-full py-3.5 text-[15px] text-red-500 font-medium bg-white rounded-2xl shadow-sm active:bg-red-50 transition-colors disabled:opacity-50"
                 >
                   {deleting ? "Eliminando..." : "Eliminar tarea"}
                 </button>
