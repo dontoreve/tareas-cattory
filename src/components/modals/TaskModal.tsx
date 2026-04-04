@@ -624,7 +624,7 @@ export default function TaskModal({
             </div>
 
             {/* ── Card 3: Details — 2-column grid ────────────── */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
               <div className="grid grid-cols-2">
                 {/* Project — full width */}
                 <div
@@ -637,7 +637,7 @@ export default function TaskModal({
                       {projectError ? "Elige un proyecto" : "Proyecto"}
                     </span>
                     <div className="flex-1 flex justify-end">
-                      <CustomSelect value={projectId} onChange={(v) => { setProjectId(v); setProjectError(false); }} options={projectOptions} placeholder="Elegir..." />
+                      <CustomSelect value={projectId} onChange={(v) => { setProjectId(v); setProjectError(false); }} options={projectOptions} placeholder="Elegir..." variant="chip" />
                     </div>
                   </div>
                 </div>
@@ -649,7 +649,7 @@ export default function TaskModal({
                     <span className="material-symbols-outlined text-slate-400 text-[18px]">radio_button_checked</span>
                     <span className="text-[14px] text-slate-500 shrink-0">Estado</span>
                     <div className="flex-1 flex justify-end">
-                      <CustomSelect value={status} onChange={setStatus} options={STATUS_OPTIONS} />
+                      <CustomSelect value={status} onChange={setStatus} options={STATUS_OPTIONS} variant="chip" />
                     </div>
                   </div>
                 </div>
@@ -660,7 +660,7 @@ export default function TaskModal({
                     <span className="material-symbols-outlined text-slate-400 text-[18px]">flag</span>
                     <span className="text-[14px] text-slate-500 shrink-0">Prioridad</span>
                     <div className="flex-1 flex justify-end">
-                      <CustomSelect value={priority} onChange={setPriority} options={PRIORITY_OPTIONS} />
+                      <CustomSelect value={priority} onChange={setPriority} options={PRIORITY_OPTIONS} variant="chip" />
                     </div>
                   </div>
                 </div>
