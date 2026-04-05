@@ -43,7 +43,7 @@ const TYPE_CONFIG: Record<
 
 function buildMessage(notif: Notification): string {
   const d = notif.data ?? {};
-  const title = (d.task_title as string) ?? "una tarea";
+  const title = (d.task_title as string) || notif.task?.title || "una tarea";
 
   switch (notif.type) {
     case "task_assigned":
