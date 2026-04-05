@@ -44,7 +44,8 @@ export interface Notification {
   user_id: string;
   task_id: string | null;
   type: string;
-  message: string;
+  message?: string;
+  data?: Record<string, unknown>;
   is_read: boolean;
   created_at: string;
   task?: Task | null;
