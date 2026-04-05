@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { getPriorityConfig } from "@/lib/utils/priority";
@@ -112,11 +112,21 @@ export default function CalendarPage() {
   const { tasks, tasksLoading, openPreview } = useDashboard();
   const [hoveredTask, setHoveredTask] = useState<{ task: Task; rect: DOMRect } | null>(null);
 
+  const [todayIso, setTodayIso] = useState(() => dateToIso(new Date()));
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
 
-  const todayIso = dateToIso(today);
+  // Update todayIso on visibility change (catches midnight crossings)
+  useEffect(() => {
+    function checkDate() {
+      if (document.visibilityState === "visible") {
+        setTodayIso(dateToIso(new Date()));
+      }
+    }
+    document.addEventListener("visibilitychange", checkDate);
+    return () => document.removeEventListener("visibilitychange", checkDate);
+  }, []);
 
   // Group tasks by deadline date
   const tasksByDate = useMemo(() => {

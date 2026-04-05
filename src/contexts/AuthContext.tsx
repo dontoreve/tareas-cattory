@@ -36,11 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, full_name, avatar_url, role")
       .eq("id", userId)
       .single();
+    if (error) { console.error("[auth] fetch profile failed:", error.message); }
     if (data) setProfile(data as Profile);
     return data as Profile | null;
   }, []);
@@ -109,14 +110,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       last = Date.now();
       fetchProfile(user!.id);
     }
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") refetchIfStale();
+    }
     window.addEventListener("focus", refetchIfStale);
     window.addEventListener("pageshow", refetchIfStale);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") refetchIfStale();
-    });
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.removeEventListener("focus", refetchIfStale);
       window.removeEventListener("pageshow", refetchIfStale);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [user, fetchProfile]);
 

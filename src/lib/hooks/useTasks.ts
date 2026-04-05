@@ -128,13 +128,14 @@ export function useTasks({ userId }: UseTasksOptions) {
     ) => {
       suppressRealtime();
 
-      // Optimistic update — apply changes immediately so UI is instant
-      const original = tasks.find((t) => t.id === taskId);
-      if (original) {
-        setTasks((prev) =>
-          prev.map((t) => (t.id === taskId ? ({ ...t, ...updates } as Task) : t))
+      // Capture original from current state (functional updater avoids stale closure)
+      let original: Task | undefined;
+      setTasks((prev) => {
+        original = prev.find((t) => t.id === taskId);
+        return prev.map((t) =>
+          t.id === taskId ? ({ ...t, ...updates } as Task) : t
         );
-      }
+      });
 
       const { data, error } = await supabase
         .from("tasks")
@@ -144,9 +145,9 @@ export function useTasks({ userId }: UseTasksOptions) {
         .single();
 
       if (error) {
-        // Rollback on failure
+        // Rollback on failure using functional updater to avoid stale state
         if (original) {
-          setTasks((prev) => prev.map((t) => (t.id === taskId ? original : t)));
+          setTasks((prev) => prev.map((t) => (t.id === taskId ? original! : t)));
         }
         throw error;
       }
@@ -156,21 +157,22 @@ export function useTasks({ userId }: UseTasksOptions) {
       setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)));
       return updated;
     },
-    [tasks, suppressRealtime]
+    [suppressRealtime]
   );
 
   const completeTask = useCallback(
     async (taskId: string) => {
       suppressRealtime();
-      // Optimistic: remove from view immediately
-      const original = tasks.find((t) => t.id === taskId);
-      setTasks((prev) =>
-        prev.map((t) =>
+      // Capture original from current state (functional updater avoids stale closure)
+      let original: Task | undefined;
+      setTasks((prev) => {
+        original = prev.find((t) => t.id === taskId);
+        return prev.map((t) =>
           t.id === taskId
             ? { ...t, status: "done" as const, completed_at: new Date().toISOString() }
             : t
-        )
-      );
+        );
+      });
 
       const { error } = await supabase
         .from("tasks")
@@ -181,12 +183,12 @@ export function useTasks({ userId }: UseTasksOptions) {
         .eq("id", taskId);
 
       if (error && original) {
-        // Rollback
-        setTasks((prev) => prev.map((t) => (t.id === taskId ? original : t)));
+        // Rollback using functional updater
+        setTasks((prev) => prev.map((t) => (t.id === taskId ? original! : t)));
         throw error;
       }
     },
-    [tasks, suppressRealtime]
+    [suppressRealtime]
   );
 
   const reopenTask = useCallback(

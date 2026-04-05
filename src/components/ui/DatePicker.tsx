@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 const MONTHS = [
@@ -54,6 +54,15 @@ export default function DatePicker({
     value ? parseInt(value.slice(5, 7)) - 1 : today.getMonth()
   );
   const [isOpen, setIsOpen] = useState(false);
+
+  // Sync viewMonth/viewYear when value changes externally (e.g. different task selected)
+  useEffect(() => {
+    if (value) {
+      setViewYear(parseInt(value.slice(0, 4)));
+      setViewMonth(parseInt(value.slice(5, 7)) - 1);
+    }
+  }, [value]);
+
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const calRef = useRef<HTMLDivElement>(null);

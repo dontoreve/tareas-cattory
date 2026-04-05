@@ -10,9 +10,9 @@ const PUSH_API_SECRET = process.env.PUSH_API_SECRET;
 // ── POST handler — receives Supabase Database Webhook payload ─────────────
 // Supabase sends: { type: "INSERT", table: "notifications", record: { ... } }
 export async function POST(req: NextRequest) {
-  // Auth check
+  // Auth check — reject when secret is missing or mismatched
   const authHeader = req.headers.get("authorization");
-  if (PUSH_API_SECRET && authHeader !== `Bearer ${PUSH_API_SECRET}`) {
+  if (!PUSH_API_SECRET || authHeader !== `Bearer ${PUSH_API_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

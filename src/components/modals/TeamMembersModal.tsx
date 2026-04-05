@@ -119,16 +119,24 @@ export default function TeamMembersModal({
     }
 
     // Clear secondary assignments
-    await supabase
+    const { error: secondaryError } = await supabase
       .from("tasks")
       .update({ secondary_responsible_id: null })
       .eq("secondary_responsible_id", memberId);
+    if (secondaryError) {
+      showToast("Error al limpiar asignaciones secundarias");
+      return;
+    }
 
     // Remove project access
-    await supabase
+    const { error: accessError } = await supabase
       .from("member_project_access")
       .delete()
       .eq("member_id", memberId);
+    if (accessError) {
+      showToast("Error al quitar acceso a proyectos");
+      return;
+    }
 
     // Delete profile
     const { error } = await supabase

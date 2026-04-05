@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   // Only allow internal calls (check secret header or service role)
   const authHeader = req.headers.get("authorization");
   const expectedSecret = process.env.PUSH_API_SECRET;
-  if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
+  if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

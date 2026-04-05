@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-const VAPID_PUBLIC_KEY =
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ??
-  "BI2hHwADLpCo6tfK1g8AXpkLo8-6QDUpDBCU9cdq9WLlmXHWB7q3KkpdklnUCFfxnUrTV8Mti89Fj2GoPilcZNY";
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -65,6 +63,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   const subscribe = useCallback(async (userId: string) => {
     if (!state.supported) {
       return { success: false, error: "Push notifications not supported on this browser" };
+    }
+    if (!VAPID_PUBLIC_KEY) {
+      return { success: false, error: "VAPID public key not configured" };
     }
 
     try {

@@ -57,6 +57,11 @@ export default function LoginPage() {
         if (error) throw error;
         router.replace("/");
       } else {
+        if (password.length < 6) {
+          setError("La contraseña debe tener al menos 6 caracteres");
+          setSubmitting(false);
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,

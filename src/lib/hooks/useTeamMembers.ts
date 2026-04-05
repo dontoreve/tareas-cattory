@@ -9,10 +9,11 @@ export function useTeamMembers(userId: string | null) {
   const [loading, setLoading] = useState(true);
 
   const fetchMembers = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, full_name, avatar_url, role")
       .order("full_name");
+    if (error) { console.error("[team] fetch members failed:", error.message); }
     if (data) setMembers(data as Profile[]);
     setLoading(false);
   }, []);

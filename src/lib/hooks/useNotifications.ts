@@ -16,13 +16,14 @@ export function useNotifications({ userId, role }: UseNotificationsOptions) {
 
   const fetchNotifications = useCallback(async () => {
     if (!userId) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("notifications")
       .select("*")
       .eq("user_id", userId)
       .eq("is_read", false)
       .order("created_at", { ascending: false })
       .limit(30);
+    if (error) { console.error("[notifications] fetch failed:", error.message); }
     if (data) {
       setNotifications(data as Notification[]);
     }
@@ -84,24 +85,34 @@ export function useNotifications({ userId, role }: UseNotificationsOptions) {
 
   const dismiss = useCallback(
     async (id: string) => {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      await supabase
+      const prev = notifications;
+      setNotifications((cur) => cur.filter((n) => n.id !== id));
+      const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
         .eq("id", id);
+      if (error) {
+        console.error("[notifications] dismiss failed:", error.message);
+        setNotifications(prev); // rollback
+      }
     },
-    []
+    [notifications]
   );
 
   const clearAll = useCallback(async () => {
     if (!userId) return;
+    const prev = notifications;
     setNotifications([]);
-    await supabase
+    const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", userId)
       .eq("is_read", false);
-  }, [userId]);
+    if (error) {
+      console.error("[notifications] clearAll failed:", error.message);
+      setNotifications(prev); // rollback
+    }
+  }, [userId, notifications]);
 
   return {
     notifications,

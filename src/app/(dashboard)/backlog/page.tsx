@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,14 +25,7 @@ export default function BacklogPage() {
   const searchQuery = globalSearch || localSearch;
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Admin-only guard — wait for auth to resolve before evaluating role
-  if (authLoading) return null;
-  if (role !== "admin") {
-    router.replace("/");
-    return null;
-  }
-
-  // Filter + sort completed tasks
+  // Filter + sort completed tasks (must be above guards to respect rules of hooks)
   const backlogTasks = useMemo(() => {
     let filtered = tasks.filter((t) => t.status === "done");
 
@@ -72,6 +65,15 @@ export default function BacklogPage() {
 
     return filtered.slice(0, 50);
   }, [tasks, projectFilter, priorityFilter, responsibleFilter, searchQuery]);
+
+  // Admin-only guard — redirect non-admins (in useEffect to respect rules of hooks)
+  useEffect(() => {
+    if (!authLoading && role !== "admin") {
+      router.replace("/");
+    }
+  }, [authLoading, role, router]);
+
+  if (authLoading || role !== "admin") return null;
 
   async function handleReopen(taskId: string) {
     try {

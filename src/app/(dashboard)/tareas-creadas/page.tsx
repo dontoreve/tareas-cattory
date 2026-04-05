@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
@@ -112,7 +113,8 @@ function DelegatedCard({
 }
 
 export default function TareasCreadasPage() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, role, loading: authLoading } = useAuth();
   const { tasks, projects, teamMembers, deleteTask, openPreview, openTaskModal } = useDashboard();
   const { showToast } = useToast();
 
@@ -163,6 +165,15 @@ export default function TareasCreadasPage() {
     }
     return grouped;
   }, [delegatedTasks]);
+
+  // Member-only guard — redirect admins who navigate here directly
+  useEffect(() => {
+    if (!authLoading && role === "admin") {
+      router.replace("/");
+    }
+  }, [authLoading, role, router]);
+
+  if (authLoading || role === "admin") return null;
 
   async function handleDelete(taskId: string) {
     try {

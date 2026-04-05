@@ -20,14 +20,16 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
   const [loading, setLoading] = useState(true);
 
   const fetchProjects = useCallback(async () => {
-    const { data } = await supabase.from("projects").select("*");
+    const { data, error } = await supabase.from("projects").select("*");
+    if (error) { console.error("[projects] fetch failed:", error.message); return; }
     if (data) setProjects(data as Project[]);
   }, []);
 
   const fetchMemberAccess = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("member_project_access")
       .select("member_id, project_id");
+    if (error) { console.error("[projects] fetch access failed:", error.message); return; }
     if (data) setMemberAccess(data);
   }, []);
 
@@ -73,14 +75,16 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
       fetchMemberAccess();
     }
     // Multiple events for maximum iOS PWA compatibility
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") refetchIfStale();
+    }
     window.addEventListener("focus", refetchIfStale);
     window.addEventListener("pageshow", refetchIfStale);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") refetchIfStale();
-    });
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.removeEventListener("focus", refetchIfStale);
       window.removeEventListener("pageshow", refetchIfStale);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [userId, fetchProjects, fetchMemberAccess]);
 
@@ -168,29 +172,36 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
 
   const deleteProject = useCallback(
     async (projectId: string) => {
-      // Unassign tasks from this project
-      const { error: tasksError } = await supabase
-        .from("tasks")
-        .update({ project_id: null })
-        .eq("project_id", projectId);
-      if (tasksError) throw tasksError;
+      // All three steps must succeed — if any fails, refetch to restore consistent state
+      try {
+        // Unassign tasks from this project
+        const { error: tasksError } = await supabase
+          .from("tasks")
+          .update({ project_id: null })
+          .eq("project_id", projectId);
+        if (tasksError) throw tasksError;
 
-      // Remove member access
-      const { error: accessError } = await supabase
-        .from("member_project_access")
-        .delete()
-        .eq("project_id", projectId);
-      if (accessError) throw accessError;
+        // Remove member access
+        const { error: accessError } = await supabase
+          .from("member_project_access")
+          .delete()
+          .eq("project_id", projectId);
+        if (accessError) throw accessError;
 
-      // Delete the project
-      const { error } = await supabase
-        .from("projects")
-        .delete()
-        .eq("id", projectId);
-      if (error) throw error;
-      setProjects((prev) => prev.filter((p) => p.id !== projectId));
+        // Delete the project
+        const { error } = await supabase
+          .from("projects")
+          .delete()
+          .eq("id", projectId);
+        if (error) throw error;
+        setProjects((prev) => prev.filter((p) => p.id !== projectId));
+      } catch (err) {
+        // Partial failure — refetch to restore consistent state
+        await fetchProjects();
+        throw err;
+      }
     },
-    []
+    [fetchProjects]
   );
 
   return {
