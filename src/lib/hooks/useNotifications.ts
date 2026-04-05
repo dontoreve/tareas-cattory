@@ -18,7 +18,7 @@ export function useNotifications({ userId, role }: UseNotificationsOptions) {
     if (!userId) return;
     const { data } = await supabase
       .from("notifications")
-      .select("*, task:tasks!task_id(title)")
+      .select("*")
       .eq("user_id", userId)
       .eq("is_read", false)
       .order("created_at", { ascending: false })

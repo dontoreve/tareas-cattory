@@ -44,11 +44,10 @@ export interface Notification {
   user_id: string;
   task_id: string | null;
   type: string;
-  message?: string;
-  data?: Record<string, unknown>;
+  title: string;
+  body: string | null;
   is_read: boolean;
   created_at: string;
-  task?: Task | null;
 }
 
 // RecurringTemplate is defined and exported from @/lib/hooks/useRecurringTasks

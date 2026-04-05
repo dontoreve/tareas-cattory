@@ -41,35 +41,6 @@ const TYPE_CONFIG: Record<
   },
 };
 
-function buildMessage(notif: Notification): string {
-  const d = notif.data ?? {};
-  const title = (d.task_title as string) || notif.task?.title || "una tarea";
-
-  switch (notif.type) {
-    case "task_assigned":
-      return `Te asignaron "${title}"`;
-    case "task_completed":
-      return `"${title}" fue completada`;
-    case "overdue":
-      return `"${title}" está vencida`;
-    case "deadline_approaching": {
-      const dl = d.deadline as string | undefined;
-      const when = dl
-        ? new Date(dl).toLocaleDateString("es-CO", { day: "numeric", month: "short" })
-        : "pronto";
-      return `"${title}" vence ${when}`;
-    }
-    case "daily_digest": {
-      const pending = (d.pending as number) ?? 0;
-      const overdue = (d.overdue as number) ?? 0;
-      if (overdue > 0) return `Tienes ${pending} tareas pendientes, ${overdue} vencidas`;
-      return `Tienes ${pending} tareas pendientes`;
-    }
-    default:
-      return notif.message ?? "Nueva notificación";
-  }
-}
-
 function timeAgo(dateStr: string): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
@@ -206,7 +177,7 @@ export default function NotificationBell({
                         <p
                           className={`text-sm font-medium ${config.chipText}`}
                         >
-                          {buildMessage(notif)}
+                          {notif.body || notif.title}
                         </p>
                       </div>
                       <span className="text-[11px] text-slate-400 whitespace-nowrap mt-0.5">

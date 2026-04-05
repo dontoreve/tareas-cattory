@@ -7,38 +7,8 @@ const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY!;
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT ?? "mailto:admin@cattory.app";
 const PUSH_API_SECRET = process.env.PUSH_API_SECRET;
 
-// ── Build human-readable message from notification type + data ────────────
-function buildMessage(type: string, data: Record<string, unknown>): { title: string; body: string } {
-  const taskTitle = (data?.task_title as string) || "una tarea";
-
-  switch (type) {
-    case "task_assigned":
-      return { title: "Nueva asignación", body: `Te asignaron "${taskTitle}"` };
-    case "task_completed":
-      return { title: "Tarea completada", body: `"${taskTitle}" fue completada` };
-    case "overdue":
-      return { title: "Tarea vencida", body: `"${taskTitle}" está vencida` };
-    case "deadline_approaching": {
-      const dl = data?.deadline as string | undefined;
-      const when = dl
-        ? new Date(dl).toLocaleDateString("es-CO", { day: "numeric", month: "short" })
-        : "pronto";
-      return { title: "Fecha límite cerca", body: `"${taskTitle}" vence ${when}` };
-    }
-    case "daily_digest": {
-      const pending = (data?.pending as number) ?? 0;
-      const overdue = (data?.overdue as number) ?? 0;
-      const body = overdue > 0
-        ? `Tienes ${pending} tareas pendientes, ${overdue} vencidas`
-        : `Tienes ${pending} tareas pendientes`;
-      return { title: "Resumen del día", body };
-    }
-    default:
-      return { title: "Cattory", body: "Tienes una nueva notificación" };
-  }
-}
-
 // ── POST handler — receives Supabase Database Webhook payload ─────────────
+// Supabase sends: { type: "INSERT", table: "notifications", record: { ... } }
 export async function POST(req: NextRequest) {
   // Auth check
   const authHeader = req.headers.get("authorization");
@@ -60,16 +30,14 @@ export async function POST(req: NextRequest) {
   }
 
   const userId = record.user_id as string;
-  const notifType = record.type as string;
-  const notifData = (record.data as Record<string, unknown>) ?? {};
+  const title = (record.title as string) || "Cattory";
+  const body = (record.body as string) || "Tienes una nueva notificación";
+  const notifType = (record.type as string) || "task_assigned";
   const taskId = (record.task_id as string) ?? null;
 
   if (!userId) {
     return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
   }
-
-  // Build message
-  const { title, body } = buildMessage(notifType, notifData);
 
   // Import web-push
   let webpush: typeof import("web-push");
@@ -81,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
-  // Fetch push subscriptions
+  // Fetch push subscriptions for this user
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
