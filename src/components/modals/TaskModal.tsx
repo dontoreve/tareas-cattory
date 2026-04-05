@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, type FormEvent } from "react";
 import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
+import DatePicker from "@/components/ui/DatePicker";
 import { TAG_COLORS } from "@/lib/utils/colors";
 import type { Task, TaskLink, Profile, Project } from "@/lib/types";
 
@@ -528,6 +529,7 @@ export default function TaskModal({
                   placeholder="Nombre de la tarea"
                   required
                   autoComplete="off"
+                  autoFocus={!isEdit}
                   className="w-full text-[20px] font-bold bg-transparent border-none outline-none ring-0 focus:ring-0 focus:outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600 text-slate-900 dark:text-slate-100 caret-primary"
                 />
               </div>
@@ -637,17 +639,12 @@ export default function TaskModal({
                     <span className={`text-[14px] flex-1 ${dateError ? "text-red-500 font-medium" : "text-slate-500"}`}>
                       {dateError ? "Elige una fecha" : "Fecha"}
                     </span>
-                    <label className="relative cursor-pointer">
-                      <span className={`text-[14px] font-medium ${deadline ? "text-primary" : "text-slate-400"}`}>
-                        {deadline ? new Date(deadline + "T00:00:00").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Sin fecha"}
-                      </span>
-                      <input
-                        type="date"
-                        value={deadline}
-                        onChange={(e) => { setDeadline(e.target.value); setDateError(false); }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                    </label>
+                    <DatePicker
+                      value={deadline}
+                      onChange={(v) => { setDeadline(v); setDateError(false); }}
+                      mode="click"
+                      variant="inline"
+                    />
                   </div>
                 </div>
               </div>
