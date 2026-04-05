@@ -770,12 +770,6 @@ export default function PriorityPage() {
       byProject.set(p.id, { name: p.name, tasks: projectTasks });
     }
 
-    // Unassigned
-    const unassigned = tasks.filter((t) => !t.project_id);
-    if (unassigned.length > 0) {
-      byProject.set("__none__", { name: "Sin Proyecto", tasks: unassigned });
-    }
-
     return [...byProject.entries()]
       .map(([id, data]) => ({ id, ...data }))
       .sort((a, b) => b.tasks.length - a.tasks.length);
