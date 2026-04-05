@@ -637,7 +637,7 @@ export default function TaskModal({
                     <span className={`text-[14px] flex-1 ${dateError ? "text-red-500 font-medium" : "text-slate-500"}`}>
                       {dateError ? "Elige una fecha" : "Fecha"}
                     </span>
-                    <div className="relative">
+                    <label className="relative cursor-pointer">
                       <span className={`text-[14px] font-medium ${deadline ? "text-primary" : "text-slate-400"}`}>
                         {deadline ? new Date(deadline + "T00:00:00").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Sin fecha"}
                       </span>
@@ -645,9 +645,9 @@ export default function TaskModal({
                         type="date"
                         value={deadline}
                         onChange={(e) => { setDeadline(e.target.value); setDateError(false); }}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       />
-                    </div>
+                    </label>
                   </div>
                 </div>
               </div>
