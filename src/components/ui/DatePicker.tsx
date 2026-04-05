@@ -33,6 +33,7 @@ interface DatePickerProps {
   variant?: "input" | "inline";
   overdue?: boolean;
   showEditIcon?: boolean;
+  preferUp?: boolean;
 }
 
 export default function DatePicker({
@@ -43,6 +44,7 @@ export default function DatePicker({
   variant = "input",
   overdue = false,
   showEditIcon = true,
+  preferUp = false,
 }: DatePickerProps) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(
@@ -225,10 +227,11 @@ export default function DatePicker({
             const rect = triggerRef.current?.getBoundingClientRect();
             if (!rect) return { top: 0, left: 0 };
             const calHeight = 320;
+            const calWidth = 276;
             const spaceBelow = window.innerHeight - rect.bottom;
-            const openUp = spaceBelow < calHeight && rect.top > calHeight;
+            const openUp = preferUp || (spaceBelow < calHeight && rect.top > calHeight);
             const top = openUp ? rect.top - calHeight - 4 : rect.bottom + 4;
-            const left = Math.min(rect.left, window.innerWidth - 290);
+            const left = Math.max(8, Math.min(rect.right - calWidth, window.innerWidth - calWidth - 8));
             return { top, left };
           })()}
           onMouseEnter={mode === "hover" ? cancelClose : undefined}

@@ -654,6 +654,7 @@ export default function TaskModal({
                       mode="click"
                       variant="inline"
                       showEditIcon={false}
+                      preferUp
                     />
                   </div>
                 </div>
