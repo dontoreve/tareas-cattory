@@ -770,10 +770,18 @@ export default function PriorityPage() {
       byProject.set(p.id, { name: p.name, tasks: projectTasks });
     }
 
+    const uid = user?.id;
     return [...byProject.entries()]
       .map(([id, data]) => ({ id, ...data }))
-      .sort((a, b) => b.tasks.length - a.tasks.length);
-  }, [tasks, visibleProjects]);
+      .sort((a, b) => {
+        // Sort by how many tasks the current user has in each project
+        const myA = uid ? a.tasks.filter((t) => t.responsible_id === uid || t.secondary_responsible_id === uid).length : a.tasks.length;
+        const myB = uid ? b.tasks.filter((t) => t.responsible_id === uid || t.secondary_responsible_id === uid).length : b.tasks.length;
+        if (myB !== myA) return myB - myA;
+        // Tie-break by total tasks
+        return b.tasks.length - a.tasks.length;
+      });
+  }, [tasks, visibleProjects, user?.id]);
 
   // Team members for filter
   const { teamMembers } = useDashboard();
