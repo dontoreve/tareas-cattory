@@ -644,6 +644,7 @@ export default function TaskModal({
                       onChange={(v) => { setDeadline(v); setDateError(false); }}
                       mode="click"
                       variant="inline"
+                      showEditIcon={false}
                     />
                   </div>
                 </div>

@@ -32,6 +32,7 @@ interface DatePickerProps {
   placeholder?: string;
   variant?: "input" | "inline";
   overdue?: boolean;
+  showEditIcon?: boolean;
 }
 
 export default function DatePicker({
@@ -41,6 +42,7 @@ export default function DatePicker({
   placeholder = "Sin fecha",
   variant = "input",
   overdue = false,
+  showEditIcon = true,
 }: DatePickerProps) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(
@@ -176,7 +178,7 @@ export default function DatePicker({
         >
           {overdue && <span className="material-symbols-outlined text-[12px] text-red-500">warning</span>}
           <span>{displayText}</span>
-          <span className="material-symbols-outlined text-[10px] opacity-60">edit_calendar</span>
+          {showEditIcon && <span className="material-symbols-outlined text-[10px] opacity-60">edit_calendar</span>}
         </button>
       ) : (
         <>
@@ -222,7 +224,12 @@ export default function DatePicker({
           style={(() => {
             const rect = triggerRef.current?.getBoundingClientRect();
             if (!rect) return { top: 0, left: 0 };
-            return { top: rect.bottom + 4, left: rect.left };
+            const calHeight = 320;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const openUp = spaceBelow < calHeight && rect.top > calHeight;
+            const top = openUp ? rect.top - calHeight - 4 : rect.bottom + 4;
+            const left = Math.min(rect.left, window.innerWidth - 290);
+            return { top, left };
           })()}
           onMouseEnter={mode === "hover" ? cancelClose : undefined}
           onMouseLeave={mode === "hover" ? scheduleClose : undefined}
