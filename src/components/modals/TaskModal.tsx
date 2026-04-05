@@ -5,12 +5,6 @@ import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
 import { TAG_COLORS } from "@/lib/utils/colors";
 import type { Task, TaskLink, Profile, Project } from "@/lib/types";
 
-const STATUS_OPTIONS: SelectOption[] = [
-  { value: "to-do", label: "Por Hacer", dotClass: "bg-slate-400" },
-  { value: "in-progress", label: "En Progreso", dotClass: "bg-primary" },
-  { value: "done", label: "Completada", dotClass: "bg-emerald-500" },
-];
-
 const PRIORITY_OPTIONS: SelectOption[] = [
   { value: "5", label: "P5 Critical", dotClass: "bg-red-500" },
   { value: "4", label: "P4 High", dotClass: "bg-orange-500" },
@@ -216,7 +210,6 @@ export default function TaskModal({
   ];
 
   const selectedPriority = PRIORITY_OPTIONS.find((o) => o.value === priority);
-  const selectedStatus = STATUS_OPTIONS.find((o) => o.value === status);
 
   if (!open) return null;
 
@@ -448,26 +441,6 @@ export default function TaskModal({
               </div>
               <div className="h-px bg-slate-100 ml-12" />
 
-              {/* Status */}
-              <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
-                <span className="material-symbols-outlined text-slate-400 text-[18px]">radio_button_checked</span>
-                <span className="text-[15px] text-slate-700 flex-1">Estado</span>
-                {selectedStatus?.dotClass && (
-                  <span className={`size-2 rounded-full ${selectedStatus.dotClass}`} />
-                )}
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="bg-transparent border-none outline-none ring-0 focus:ring-0 text-[15px] text-primary font-medium text-right appearance-none pr-0"
-                >
-                  {STATUS_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined text-slate-300 text-[16px] -ml-1">chevron_right</span>
-              </label>
-              <div className="h-px bg-slate-100 ml-12" />
-
               {/* Priority */}
               <label className="flex items-center gap-3 px-4 py-3.5 active:bg-slate-50 transition-colors">
                 <span className="material-symbols-outlined text-slate-400 text-[18px]">flag</span>
@@ -642,19 +615,8 @@ export default function TaskModal({
                 </div>
                 <div className="col-span-2 h-px bg-slate-100 dark:bg-slate-800 ml-12" />
 
-                {/* Status */}
-                <div className="border-r border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-3 px-4 py-3.5">
-                    <span className="material-symbols-outlined text-slate-400 text-[18px]">radio_button_checked</span>
-                    <span className="text-[14px] text-slate-500 shrink-0">Estado</span>
-                    <div className="flex-1 flex justify-end">
-                      <CustomSelect value={status} onChange={setStatus} options={STATUS_OPTIONS} variant="chip" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Priority */}
-                <div>
+                {/* Priority — full width */}
+                <div className="col-span-2">
                   <div className="flex items-center gap-3 px-4 py-3.5">
                     <span className="material-symbols-outlined text-slate-400 text-[18px]">flag</span>
                     <span className="text-[14px] text-slate-500 shrink-0">Prioridad</span>
