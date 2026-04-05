@@ -151,7 +151,7 @@ export default function TaskPreviewModal({
                 {task.links.map((link, i) => (
                   <a
                     key={i}
-                    href={link.url}
+                    href={/^https?:\/\//i.test(link.url) ? link.url : `https://${link.url}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"

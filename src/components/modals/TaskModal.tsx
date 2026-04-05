@@ -123,7 +123,7 @@ export default function TaskModal({
   function migrateUrls() {
     const newLinks = detectedUrls
       .filter((url) => !links.some((l) => l.url === url))
-      .map((url) => ({ label: url, url }));
+      .map((url) => ({ label: url, url: normalizeUrl(url) }));
     if (newLinks.length === 0) return;
     setLinks((prev) => [...prev, ...newLinks]);
     let cleaned = description;
@@ -133,17 +133,26 @@ export default function TaskModal({
     setDescription(cleaned);
   }
 
+  function normalizeUrl(raw: string): string {
+    const trimmed = raw.trim();
+    if (!trimmed) return trimmed;
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+  }
+
   // Auto-save link when URL is filled and user moves away
   const autoSaveLink = useCallback(() => {
     if (!linkUrl.trim()) return;
-    setLinks((prev) => [...prev, { label: linkLabel.trim() || linkUrl.trim(), url: linkUrl.trim() }]);
+    const url = normalizeUrl(linkUrl);
+    setLinks((prev) => [...prev, { label: linkLabel.trim() || linkUrl.trim(), url }]);
     setLinkLabel("");
     setLinkUrl("");
   }, [linkLabel, linkUrl]);
 
   const addLink = useCallback(() => {
     if (!linkUrl.trim()) return;
-    setLinks((prev) => [...prev, { label: linkLabel.trim() || linkUrl.trim(), url: linkUrl.trim() }]);
+    const url = normalizeUrl(linkUrl);
+    setLinks((prev) => [...prev, { label: linkLabel.trim() || linkUrl.trim(), url }]);
     setLinkLabel("");
     setLinkUrl("");
   }, [linkLabel, linkUrl]);
@@ -184,7 +193,7 @@ export default function TaskModal({
     }
     // Auto-save any pending link
     const finalLinks = linkUrl.trim()
-      ? [...links, { label: linkLabel.trim() || linkUrl.trim(), url: linkUrl.trim() }]
+      ? [...links, { label: linkLabel.trim() || linkUrl.trim(), url: normalizeUrl(linkUrl) }]
       : links;
     setSaving(true);
     try {
