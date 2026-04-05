@@ -51,6 +51,8 @@ interface DashboardState {
   refetchMembers: () => Promise<void>;
   createProject: (name: string) => Promise<Project>;
   renameProject: (id: string, name: string) => Promise<void>;
+  archiveProject: (id: string) => Promise<void>;
+  restoreProject: (id: string) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
 
   // Task modal state
@@ -95,16 +97,18 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     refetch: refetchProjects,
     createProject,
     renameProject,
+    archiveProject,
+    restoreProject,
     deleteProject,
   } = useProjects({ userId, role });
 
   const { members: teamMembers, loading: membersLoading, refetch: refetchMembers } =
     useTeamMembers(userId);
 
-  // Projects filtered by access (members only see assigned projects)
+  // Projects filtered by access (members only see assigned projects), excluding archived
   const visibleProjects = useMemo(() => {
-    if (role === "admin" || !userId) return projects;
-    return getProjectsForMember(userId);
+    const base = role === "admin" || !userId ? projects : getProjectsForMember(userId);
+    return base.filter((p) => !p.archived_at);
   }, [projects, role, userId, getProjectsForMember]);
 
   // Task modal state
@@ -158,6 +162,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         refetchMembers,
         createProject,
         renameProject,
+        archiveProject,
+        restoreProject,
         deleteProject,
         taskModalOpen,
         editingTask,

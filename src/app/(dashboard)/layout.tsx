@@ -42,6 +42,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     refetchMembers,
     createProject,
     renameProject,
+    archiveProject,
+    restoreProject,
     deleteProject: deleteProjectFn,
     setGlobalSearch,
     previewTask,
@@ -176,6 +178,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         projects={projects}
         onCreate={createProject}
         onRename={renameProject}
+        onArchive={archiveProject}
+        onRestore={restoreProject}
         onDelete={deleteProjectFn}
       />
 

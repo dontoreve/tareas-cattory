@@ -12,6 +12,7 @@ export interface Project {
   id: string;
   name: string;
   created_by?: string;
+  archived_at?: string | null;
 }
 
 export interface Task {

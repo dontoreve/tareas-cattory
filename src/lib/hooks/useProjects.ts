@@ -137,6 +137,35 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
     []
   );
 
+  const archiveProject = useCallback(
+    async (projectId: string) => {
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from("projects")
+        .update({ archived_at: now })
+        .eq("id", projectId);
+      if (error) throw error;
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, archived_at: now } : p))
+      );
+    },
+    []
+  );
+
+  const restoreProject = useCallback(
+    async (projectId: string) => {
+      const { error } = await supabase
+        .from("projects")
+        .update({ archived_at: null })
+        .eq("id", projectId);
+      if (error) throw error;
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, archived_at: null } : p))
+      );
+    },
+    []
+  );
+
   const deleteProject = useCallback(
     async (projectId: string) => {
       // Unassign tasks from this project
@@ -173,6 +202,8 @@ export function useProjects({ userId, role }: UseProjectsOptions) {
     hasMemberAccess,
     createProject,
     renameProject,
+    archiveProject,
+    restoreProject,
     deleteProject,
   };
 }
