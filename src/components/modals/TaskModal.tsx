@@ -7,11 +7,9 @@ import { TAG_COLORS } from "@/lib/utils/colors";
 import type { Task, TaskLink, Profile, Project } from "@/lib/types";
 
 const PRIORITY_OPTIONS: SelectOption[] = [
-  { value: "5", label: "P5 Critical", dotClass: "bg-red-500" },
-  { value: "4", label: "P4 High", dotClass: "bg-orange-500" },
-  { value: "3", label: "P3 Medium", dotClass: "bg-amber-500" },
-  { value: "2", label: "P2 Low", dotClass: "bg-green-500" },
-  { value: "1", label: "P1 Routine", dotClass: "bg-slate-500" },
+  { value: "3", label: "Urgente", dotClass: "bg-red-500" },
+  { value: "2", label: "Normal", dotClass: "bg-amber-500" },
+  { value: "1", label: "Puede esperar", dotClass: "bg-slate-400" },
 ];
 
 interface TaskModalProps {
@@ -56,7 +54,7 @@ export default function TaskModal({
   const [secondaryId, setSecondaryId] = useState("");
   const [projectId, setProjectId] = useState("");
   const [status, setStatus] = useState("to-do");
-  const [priority, setPriority] = useState("3");
+  const [priority, setPriority] = useState("2");
   const [deadline, setDeadline] = useState("");
   const [links, setLinks] = useState<TaskLink[]>([]);
   const [linkLabel, setLinkLabel] = useState("");
@@ -89,7 +87,7 @@ export default function TaskModal({
       setSecondaryId("");
       setProjectId("");
       setStatus("to-do");
-      setPriority("3");
+      setPriority("2");
       setDeadline("");
       setLinks([]);
     }

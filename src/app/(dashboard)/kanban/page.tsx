@@ -11,7 +11,7 @@ import { useDashboard } from "@/contexts/DashboardContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
 import { useCelebration } from "@/components/ui/CelebrationAnimation";
-import { getPriorityConfig, PRIORITY_BG } from "@/lib/utils/priority";
+import { getPriorityConfig, PRIORITY_BG, getUrgencyScore } from "@/lib/utils/priority";
 import { formatDate, isOverdue } from "@/lib/utils/dates";
 import { TAG_COLORS, getColorIndex } from "@/lib/utils/colors";
 import { matchesSearch } from "@/lib/utils/search";
@@ -242,10 +242,9 @@ export default function KanbanPage() {
       );
     }
     return filtered.sort((a, b) => {
-      if (!a.deadline && !b.deadline) return 0;
-      if (!a.deadline) return 1;
-      if (!b.deadline) return -1;
-      return a.deadline.localeCompare(b.deadline);
+      const scoreA = getUrgencyScore(a.priority, a.deadline);
+      const scoreB = getUrgencyScore(b.priority, b.deadline);
+      return scoreB - scoreA;
     });
   }, [tasks, effectiveUserId, searchQuery]);
 

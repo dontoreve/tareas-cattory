@@ -9,7 +9,7 @@ import { formatDate } from "@/lib/utils/dates";
 import type { Task } from "@/lib/types";
 
 const PRIORITY_LABELS: Record<number, string> = {
-  5: "CRITICA", 4: "ALTA", 3: "MEDIA", 2: "BAJA", 1: "RUTINA",
+  3: "URGENTE", 2: "NORMAL", 1: "PUEDE ESPERAR",
 };
 
 function CalendarTooltip({ task, anchorRect }: { task: Task; anchorRect: DOMRect }) {

@@ -144,12 +144,12 @@ textarea:focus-visible {
   100% { transform: translateY(0); opacity: 1; }
 }
 
-/* ── P5 Critical pulse ───────────────────────────────────────── */
+/* ── Urgente pulse ──────────────────────────────────────────── */
 @keyframes urgentPulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
   50%      { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
 }
-.priority-badge-critical {
+.priority-badge-urgente {
   animation: urgentPulse 2s ease-in-out infinite;
 }
 
@@ -189,7 +189,7 @@ textarea:focus-visible {
 
 /* ── Reduced motion ──────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .priority-badge-critical { animation: none; }
+  .priority-badge-urgente { animation: none; }
   tbody tr { animation: none !important; }
   .task-card { transition: none; }
   .task-completing, .task-card-completing { animation: none; }

@@ -133,7 +133,7 @@ export default function BacklogPage() {
             onChange={(v) => setPriorityFilter(v ? Number(v) : null)}
             options={[
               { value: "", label: "Todas las prioridades" },
-              ...([5, 4, 3, 2, 1] as const).map((p) => ({
+              ...([3, 2, 1] as const).map((p) => ({
                 value: String(p),
                 label: getPriorityConfig(p).label,
                 dotClass: getPriorityConfig(p).dot,

@@ -17,11 +17,9 @@ const FREQ_OPTIONS = [
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: "5", label: "P5 Critical", dotClass: "bg-red-500" },
-  { value: "4", label: "P4 High", dotClass: "bg-orange-500" },
-  { value: "3", label: "P3 Medium", dotClass: "bg-amber-500" },
-  { value: "2", label: "P2 Low", dotClass: "bg-green-500" },
-  { value: "1", label: "P1 Routine", dotClass: "bg-slate-500" },
+  { value: "3", label: "Urgente", dotClass: "bg-red-500" },
+  { value: "2", label: "Normal", dotClass: "bg-amber-500" },
+  { value: "1", label: "Puede esperar", dotClass: "bg-slate-400" },
 ];
 
 interface RecurringModalProps {
@@ -52,7 +50,7 @@ export default function RecurringModal({
   const [responsibleId, setResponsibleId] = useState(currentUserId);
   const [secondaryId, setSecondaryId] = useState("");
   const [projectId, setProjectId] = useState("");
-  const [priority, setPriority] = useState("3");
+  const [priority, setPriority] = useState("2");
   const [frequency, setFrequency] = useState("weekly");
   const [selectedDays, setSelectedDays] = useState<number[]>([1]); // Monday default
   const [weekOfMonth, setWeekOfMonth] = useState("1");
@@ -78,7 +76,7 @@ export default function RecurringModal({
       setResponsibleId(currentUserId);
       setSecondaryId("");
       setProjectId("");
-      setPriority("3");
+      setPriority("2");
       setFrequency("weekly");
       setSelectedDays([1]);
       setWeekOfMonth("1");

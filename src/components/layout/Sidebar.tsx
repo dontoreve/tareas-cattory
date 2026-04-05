@@ -45,7 +45,7 @@ function getFreqSummary(t: RecurringTemplate): string {
 }
 
 const PRIORITY_DOT: Record<number, string> = {
-  5: "bg-red-500", 4: "bg-orange-500", 3: "bg-amber-500", 2: "bg-green-500", 1: "bg-slate-400",
+  3: "bg-red-500", 2: "bg-amber-500", 1: "bg-slate-400",
 };
 
 export default function Sidebar({

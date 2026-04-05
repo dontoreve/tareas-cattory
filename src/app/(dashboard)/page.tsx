@@ -5,7 +5,7 @@ import { useDashboard } from "@/contexts/DashboardContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
 import { useCelebration } from "@/components/ui/CelebrationAnimation";
-import { getPriorityConfig, PRIORITY_BG, PRIORITY_HOVER } from "@/lib/utils/priority";
+import { getPriorityConfig, PRIORITY_BG, PRIORITY_HOVER, getUrgencyScore } from "@/lib/utils/priority";
 import { formatDate, isOverdue } from "@/lib/utils/dates";
 import { matchesSearch } from "@/lib/utils/search";
 import { TAG_COLORS, getColorIndex } from "@/lib/utils/colors";
@@ -149,11 +149,9 @@ function InlinePriorityDropdown({
   }, [onClose]);
 
   const options = [
-    { value: 5, label: "P5 Critical" },
-    { value: 4, label: "P4 High" },
-    { value: 3, label: "P3 Medium" },
-    { value: 2, label: "P2 Low" },
-    { value: 1, label: "P1 Routine" },
+    { value: 3, label: "Urgente" },
+    { value: 2, label: "Normal" },
+    { value: 1, label: "Puede esperar" },
   ];
 
   return createPortal(
@@ -257,44 +255,12 @@ function InlineAssigneeDropdown({
   );
 }
 
-// ── Sorting: 4-tier by deadline ────────────────────────────────
+// ── Sorting: by Urgency Score (priority × deadline multiplier) ─
 function sortTasksDynamic(tasks: Task[]): Task[] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayMs = today.getTime();
-
-  function deadlineMs(t: Task): number | null {
-    if (!t.deadline) return null;
-    const [y, m, d] = t.deadline.split("-").map(Number);
-    return new Date(y, m - 1, d).getTime();
-  }
-
-  function tier(t: Task): number {
-    const ms = deadlineMs(t);
-    if (ms === null) return 3; // No deadline
-    if (ms < todayMs) return 0; // Overdue
-    if (ms === todayMs) return 1; // Due today
-    return 2; // Future
-  }
-
   return [...tasks].sort((a, b) => {
-    const ta = tier(a);
-    const tb = tier(b);
-    if (ta !== tb) return ta - tb;
-
-    const msA = deadlineMs(a);
-    const msB = deadlineMs(b);
-
-    if (ta === 0) {
-      // Overdue: most overdue first
-      if (msA !== msB) return (msA ?? 0) - (msB ?? 0);
-    } else if (ta === 2) {
-      // Future: soonest first
-      if (msA !== msB) return (msA ?? 0) - (msB ?? 0);
-    }
-
-    // Within same tier/date: higher priority first
-    return b.priority - a.priority;
+    const scoreA = getUrgencyScore(a.priority, a.deadline);
+    const scoreB = getUrgencyScore(b.priority, b.deadline);
+    return scoreB - scoreA; // Higher score first
   });
 }
 
@@ -924,7 +890,7 @@ export default function PriorityPage() {
             >
               Todas
             </DockChip>
-            {[5, 4, 3, 2, 1].map((p) => {
+            {[3, 2, 1].map((p) => {
               const cfg = getPriorityConfig(p);
               const active = priorityFilter === p;
               return (
